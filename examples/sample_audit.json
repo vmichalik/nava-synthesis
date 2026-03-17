@@ -1,0 +1,161 @@
+{
+  "run_timestamp": "2026-03-17T15:57:19.027719+00:00",
+  "portfolio": {
+    "balances": {
+      "WETH": 1.0,
+      "USDC": 500.0
+    },
+    "prices": {
+      "WETH": 3500.0,
+      "USDC": 1.0
+    },
+    "total_value_usd": 4000.0,
+    "allocation": {
+      "WETH": 0.875,
+      "USDC": 0.125
+    }
+  },
+  "trades": [
+    {
+      "timestamp": "2026-03-17T15:57:19.027499+00:00",
+      "attempt": 1,
+      "intent": "Swap 0.314286 WETH for USDC on Uniswap V3, max slippage 0.50%, deadline 30 minutes",
+      "token_in": "WETH",
+      "token_out": "USDC",
+      "amount_in": 0.3142857142857143,
+      "slippage_bps": 50,
+      "chain_id": 11155111,
+      "proposed_tx": {
+        "protocol": "uniswap",
+        "to": "0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E",
+        "from": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18",
+        "value": "0",
+        "call": {
+          "function": "exactInputSingle",
+          "params": {
+            "tokenIn": "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+            "tokenOut": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+            "fee": 3000,
+            "recipient": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18",
+            "deadline": 1773764836,
+            "amountIn": 314285714285714304,
+            "amountOutMinimum": 0,
+            "sqrtPriceLimitX96": 0
+          }
+        },
+        "slippage_bps": 50
+      },
+      "verification": {
+        "decision": "PASS",
+        "reason": "All required checks passed",
+        "protocol": "uniswap",
+        "primary_failure_node": null,
+        "llm_calls": 5,
+        "passed_nodes": [
+          "legal_compliance.sanctions_screening",
+          "adversarial_detection.mev_risky_parameters",
+          "technical_invariants.format_validation_lowlevel",
+          "technical_invariants.protocol_compatibility",
+          "intent_alignment.slippage_tolerance"
+        ],
+        "failed_nodes": [],
+        "skipped_nodes": [
+          "intent_alignment.operation_matching",
+          "legal_compliance.token_legitimacy",
+          "intent_alignment.amount_matching",
+          "intent_alignment.fee_alignment",
+          "intent_alignment.deadline_consistency",
+          "intent_alignment.approval_covers_primary",
+          "intent_alignment.sequence_check",
+          "intent_alignment.token_matching",
+          "adversarial_detection.intent_manipulation",
+          "intent_alignment.element_matching",
+          "adversarial_detection.parameter_manipulation",
+          "intent_alignment.requirement_compliance",
+          "adversarial_detection.consistency_analysis"
+        ],
+        "explanation": {
+          "summary": "Transaction validation passed. All required checks for uniswap protocol completed successfully.",
+          "decision": "PASS",
+          "key_issues": [],
+          "affected_nodes": {
+            "failed": {
+              "count": 0,
+              "nodes": [],
+              "node_ids": []
+            },
+            "passed": {
+              "count": 5,
+              "nodes": [
+                "Legal Compliance: Sanctions Screening",
+                "Adversarial Detection: Mev Risky Parameters",
+                "Technical Invariants: Format Validation Lowlevel",
+                "Technical Invariants: Protocol Compatibility",
+                "Intent Alignment: Slippage Tolerance"
+              ],
+              "node_ids": [
+                "legal_compliance.sanctions_screening",
+                "adversarial_detection.mev_risky_parameters",
+                "technical_invariants.format_validation_lowlevel",
+                "technical_invariants.protocol_compatibility",
+                "intent_alignment.slippage_tolerance"
+              ]
+            },
+            "skipped": {
+              "count": 13,
+              "nodes": [
+                "Intent Alignment: Operation Matching",
+                "Legal Compliance: Token Legitimacy",
+                "Intent Alignment: Amount Matching",
+                "Intent Alignment: Fee Alignment",
+                "Intent Alignment: Deadline Consistency",
+                "Intent Alignment: Approval Covers Primary",
+                "Intent Alignment: Sequence Check",
+                "Intent Alignment: Token Matching",
+                "Adversarial Detection: Intent Manipulation",
+                "Intent Alignment: Element Matching",
+                "Adversarial Detection: Parameter Manipulation",
+                "Intent Alignment: Requirement Compliance",
+                "Adversarial Detection: Consistency Analysis"
+              ],
+              "node_ids": [
+                "intent_alignment.operation_matching",
+                "legal_compliance.token_legitimacy",
+                "intent_alignment.amount_matching",
+                "intent_alignment.fee_alignment",
+                "intent_alignment.deadline_consistency",
+                "intent_alignment.approval_covers_primary",
+                "intent_alignment.sequence_check",
+                "intent_alignment.token_matching",
+                "adversarial_detection.intent_manipulation",
+                "intent_alignment.element_matching",
+                "adversarial_detection.parameter_manipulation",
+                "intent_alignment.requirement_compliance",
+                "adversarial_detection.consistency_analysis"
+              ]
+            }
+          },
+          "confidence_summary": {
+            "min": 0.8,
+            "max": 1.0,
+            "avg": 0.9055555555555556
+          },
+          "recommendations": [
+            "Transaction appears valid. Proceed with caution and review gas limits."
+          ],
+          "metadata": {
+            "protocol": "uniswap",
+            "total_nodes": 18,
+            "failed_nodes": 0,
+            "passed_nodes": 5,
+            "skipped_nodes": 13,
+            "early_stop": false,
+            "early_stop_node": null,
+            "llm_calls": 5
+          }
+        }
+      },
+      "execution": null
+    }
+  ]
+}
