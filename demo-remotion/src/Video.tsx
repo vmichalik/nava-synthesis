@@ -1,10 +1,12 @@
-import { Sequence, AbsoluteFill, Audio, staticFile } from 'remotion';
+import { Sequence, AbsoluteFill, Audio, staticFile, interpolate, useCurrentFrame } from 'remotion';
 import { TitleScene } from './TitleScene';
 import { ProblemScene } from './ProblemScene';
 import { ArchScene } from './ArchScene';
 import { TerminalScene } from './TerminalScene';
 import { DashboardScene } from './DashboardScene';
 import { ClosingScene } from './ClosingScene';
+
+const MUSIC_FILE = staticFile('Aylex - Life is Beautiful (freetouse.com).mp3');
 
 /**
  * Arbiter Guard Demo Video
@@ -18,8 +20,19 @@ import { ClosingScene } from './ClosingScene';
  *   1320-1499: Closing (6s)
  */
 export const ArbiterGuardVideo: React.FC = () => {
+  const frame = useCurrentFrame();
+
+  // Fade music in over first 2s, fade out over last 3s
+  const musicVolume = interpolate(
+    frame,
+    [0, 60, 1380, 1500],
+    [0, 0.35, 0.35, 0],
+    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+  );
+
   return (
     <AbsoluteFill>
+      <Audio src={MUSIC_FILE} volume={musicVolume} />
       <Sequence from={0} durationInFrames={180}>
         <TitleScene />
       </Sequence>
