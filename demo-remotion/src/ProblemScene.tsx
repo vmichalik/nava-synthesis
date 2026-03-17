@@ -1,0 +1,82 @@
+import { AbsoluteFill, useCurrentFrame, interpolate } from 'remotion';
+import { colors, font, status } from './tokens';
+
+export const ProblemScene: React.FC = () => {
+  const frame = useCurrentFrame();
+
+  const headerOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
+  const line1 = interpolate(frame, [15, 30], [0, 1], { extrapolateRight: 'clamp' });
+  const line2 = interpolate(frame, [35, 50], [0, 1], { extrapolateRight: 'clamp' });
+  const line3 = interpolate(frame, [55, 70], [0, 1], { extrapolateRight: 'clamp' });
+  const answer = interpolate(frame, [80, 100], [0, 1], { extrapolateRight: 'clamp' });
+
+  const textStyle = {
+    fontSize: 20,
+    color: 'rgba(255,255,255,0.7)',
+    lineHeight: 1.6,
+    maxWidth: 700,
+  };
+
+  return (
+    <AbsoluteFill style={{
+      background: colors.black,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: font.primary,
+      padding: 80,
+    }}>
+      <div style={{ opacity: headerOpacity }}>
+        <div style={{
+          color: colors.red,
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: '0.15em',
+          fontFamily: font.mono,
+          textTransform: 'uppercase' as const,
+          marginBottom: 12,
+        }}>
+          THE PROBLEM
+        </div>
+        <div style={{
+          color: colors.white,
+          fontSize: 36,
+          fontWeight: 700,
+          letterSpacing: '-0.01em',
+          marginBottom: 40,
+        }}>
+          AI agents move money without guardrails
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ ...textStyle, opacity: line1 }}>
+          <span style={{ color: status.rejected, fontFamily: font.mono, fontSize: 14, marginRight: 12 }}>01</span>
+          No independent verification before on-chain execution
+        </div>
+        <div style={{ ...textStyle, opacity: line2 }}>
+          <span style={{ color: status.pending, fontFamily: font.mono, fontSize: 14, marginRight: 12 }}>02</span>
+          No audit trail of agent decisions
+        </div>
+        <div style={{ ...textStyle, opacity: line3 }}>
+          <span style={{ color: status.info, fontFamily: font.mono, fontSize: 14, marginRight: 12 }}>03</span>
+          Humans can't scope what agents are allowed to do
+        </div>
+      </div>
+
+      <div style={{
+        opacity: answer,
+        marginTop: 50,
+        padding: '16px 32px',
+        border: `1px solid rgba(254,6,0,0.3)`,
+        borderRadius: 12,
+        background: 'rgba(254,6,0,0.05)',
+      }}>
+        <span style={{ color: colors.white, fontSize: 20, fontWeight: 700 }}>
+          The Arbiter verifies every trade before it touches the chain.
+        </span>
+      </div>
+    </AbsoluteFill>
+  );
+};
