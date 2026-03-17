@@ -46,14 +46,14 @@ const Arrow: React.FC<{ x1: number; y1: number; x2: number; y2: number; opacity:
 export const ArchScene: React.FC = () => {
   const frame = useCurrentFrame();
 
-  const header = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
-  const box1 = interpolate(frame, [15, 30], [0, 1], { extrapolateRight: 'clamp' });
-  const arrow1 = interpolate(frame, [30, 40], [0, 1], { extrapolateRight: 'clamp' });
-  const box2 = interpolate(frame, [35, 50], [0, 1], { extrapolateRight: 'clamp' });
-  const arrow2 = interpolate(frame, [50, 60], [0, 1], { extrapolateRight: 'clamp' });
-  const box3 = interpolate(frame, [55, 70], [0, 1], { extrapolateRight: 'clamp' });
-  const box4 = interpolate(frame, [70, 85], [0, 1], { extrapolateRight: 'clamp' });
-  const arrow3 = interpolate(frame, [75, 85], [0, 1], { extrapolateRight: 'clamp' });
+  const header = interpolate(frame, [0, 25], [0, 1], { extrapolateRight: 'clamp' });
+  const box1 = interpolate(frame, [25, 50], [0, 1], { extrapolateRight: 'clamp' });
+  const arrow1 = interpolate(frame, [50, 65], [0, 1], { extrapolateRight: 'clamp' });
+  const box2 = interpolate(frame, [60, 85], [0, 1], { extrapolateRight: 'clamp' });
+  const arrow2 = interpolate(frame, [85, 100], [0, 1], { extrapolateRight: 'clamp' });
+  const box3 = interpolate(frame, [95, 120], [0, 1], { extrapolateRight: 'clamp' });
+  const box4 = interpolate(frame, [120, 145], [0, 1], { extrapolateRight: 'clamp' });
+  const arrow3 = interpolate(frame, [130, 145], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill style={{
@@ -69,7 +69,6 @@ export const ArchScene: React.FC = () => {
         </div>
       </div>
 
-      {/* Architecture diagram */}
       <div style={{ position: 'relative', width: '100%', height: '100%' }}>
         <Box label="Trading Agent" sublabel="Python | Strategy + retry logic" color={colors.white} opacity={box1} x={120} y={200} width={220} />
         <Arrow x1={340} y1={245} x2={440} y2={245} opacity={arrow1} color={colors.red} />
@@ -77,11 +76,9 @@ export const ArchScene: React.FC = () => {
         <Arrow x1={670} y1={245} x2={770} y2={245} opacity={arrow2} color={status.approved} />
         <Box label="Uniswap V3" sublabel="SwapRouter on Sepolia" color={status.approved} opacity={box3} x={780} y={200} width={220} />
 
-        {/* Dashboard below */}
         <Arrow x1={230} y1={290} x2={230} y2={360} opacity={arrow3} color="rgba(255,255,255,0.2)" />
-        <Box label="Dashboard" sublabel="React + Nava brand-mui" color={status.info} opacity={box4} x={120} y={370} width={220} />
+        <Box label="Dashboard" sublabel="React + Nava brand theme" color={status.info} opacity={box4} x={120} y={370} width={220} />
 
-        {/* Node breakdown */}
         <div style={{
           position: 'absolute',
           right: 80,
@@ -99,8 +96,8 @@ export const ArchScene: React.FC = () => {
             { cat: 'Legal Compliance', nodes: 'sanctions, token legitimacy', color: status.info },
           ].map((item, i) => (
             <div key={i} style={{
-              opacity: interpolate(frame, [75 + i * 8, 85 + i * 8], [0, 1], { extrapolateRight: 'clamp' }),
-              marginBottom: 10,
+              opacity: interpolate(frame, [140 + i * 15, 160 + i * 15], [0, 1], { extrapolateRight: 'clamp' }),
+              marginBottom: 12,
               display: 'flex',
               gap: 8,
               alignItems: 'baseline',

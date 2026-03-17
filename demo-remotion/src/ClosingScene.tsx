@@ -4,10 +4,10 @@ import { colors, font } from './tokens';
 export const ClosingScene: React.FC = () => {
   const frame = useCurrentFrame();
 
-  const tagline = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
-  const line = interpolate(frame, [10, 30], [0, 160], { extrapolateRight: 'clamp' });
-  const details = interpolate(frame, [25, 45], [0, 1], { extrapolateRight: 'clamp' });
-  const cta = interpolate(frame, [50, 70], [0, 1], { extrapolateRight: 'clamp' });
+  const tagline = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
+  const line = interpolate(frame, [15, 45], [0, 160], { extrapolateRight: 'clamp' });
+  const details = interpolate(frame, [40, 70], [0, 1], { extrapolateRight: 'clamp' });
+  const cta = interpolate(frame, [80, 110], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill style={{
@@ -82,14 +82,14 @@ export const ClosingScene: React.FC = () => {
           fontSize: 15,
           fontWeight: 700,
         }}>
-          navalabs.ai
+          @navaai
         </div>
         <div style={{
           color: 'rgba(255,255,255,0.4)',
           fontSize: 13,
           fontFamily: font.mono,
         }}>
-          testnet.navalabs.ai
+          x.com/navaai
         </div>
       </div>
     </AbsoluteFill>

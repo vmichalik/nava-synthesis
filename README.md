@@ -39,7 +39,7 @@ The Arbiter runs as external infrastructure -- it's not part of this repo. It's 
 
 ## How the Arbiter works
 
-[Nava's Arbiter](https://navalabs.ai) is a transaction intent verification engine that runs 18 validation nodes across four categories:
+[Nava's Arbiter](https://x.com/navaai) is a transaction intent verification engine that runs 18 validation nodes across four categories:
 
 | Category | What it checks |
 |----------|---------------|
@@ -114,7 +114,7 @@ nava-synthesis/
     config.py          # Configuration (tokens, routers, strategy params)
     api.py             # Dashboard API server
   dashboard/
-    src/App.tsx        # React dashboard with @navalabs-dev/brand-mui
+    src/App.tsx        # React dashboard with Nava brand theme
   examples/
     sample_audit.json  # Example verification + execution trace
   logs/                # Audit trail output
@@ -131,10 +131,10 @@ nava-synthesis/
 | Component | Technology |
 |-----------|-----------|
 | Trading agent | Python (autonomous decision loop) |
-| Verification | [Nava Arbiter](https://navalabs.ai) (FastAPI, 18-node validation graph) |
+| Verification | [Nava Arbiter](https://x.com/navaai) (FastAPI, 18-node validation graph) |
 | Execution | Uniswap V3 SwapRouter via web3.py |
 | Quoting | Uniswap V3 Quoter V2 (real on-chain quotes) |
-| Dashboard | React + Vite + MUI + [@navalabs-dev/brand-mui](https://github.com/navalabs-dev/brand) |
+| Dashboard | React + Vite + Nava brand theme |
 | Network | Ethereum Sepolia testnet |
 | Audit | Structured JSON logs with full verification trace |
 
@@ -149,7 +149,7 @@ AI agents are moving money autonomously. Today, there's no independent verificat
 
 We didn't build the Arbiter at this hackathon -- we used it. It's live infrastructure for the agentic economy.
 
-**Learn more**: [navalabs.ai](https://navalabs.ai) | [Testnet](https://testnet.navalabs.ai)
+**Follow Nava**: [@navaai on X](https://x.com/navaai)
 
 ---
 

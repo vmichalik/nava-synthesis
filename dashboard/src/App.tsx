@@ -373,7 +373,7 @@ function App() {
         {/* Footer */}
         <Box sx={{ mt: 6, pt: 3, borderTop: '1px solid rgba(255,255,255,0.04)', textAlign: 'center' }}>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)' }}>
-            Powered by Nava's Arbiter verification engine | navalabs.ai
+            Powered by Nava's Arbiter verification engine | @navaai
           </Typography>
         </Box>
       </Container>

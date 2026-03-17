@@ -5,11 +5,11 @@ export const TitleScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const titleOpacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' });
-  const titleY = spring({ frame, fps, config: { damping: 15, stiffness: 80 } });
-  const subtitleOpacity = interpolate(frame, [20, 40], [0, 1], { extrapolateRight: 'clamp' });
-  const lineWidth = interpolate(frame, [10, 40], [0, 200], { extrapolateRight: 'clamp' });
-  const tagOpacity = interpolate(frame, [40, 60], [0, 1], { extrapolateRight: 'clamp' });
+  const titleOpacity = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
+  const titleY = spring({ frame, fps, config: { damping: 15, stiffness: 60 } });
+  const subtitleOpacity = interpolate(frame, [40, 70], [0, 1], { extrapolateRight: 'clamp' });
+  const lineWidth = interpolate(frame, [20, 60], [0, 200], { extrapolateRight: 'clamp' });
+  const tagOpacity = interpolate(frame, [80, 110], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill style={{
@@ -20,7 +20,6 @@ export const TitleScene: React.FC = () => {
       justifyContent: 'center',
       fontFamily: font.primary,
     }}>
-      {/* Subtle red glow */}
       <div style={{
         position: 'absolute',
         bottom: 0,

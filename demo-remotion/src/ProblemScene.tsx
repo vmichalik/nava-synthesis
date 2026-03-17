@@ -4,11 +4,11 @@ import { colors, font, status } from './tokens';
 export const ProblemScene: React.FC = () => {
   const frame = useCurrentFrame();
 
-  const headerOpacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: 'clamp' });
-  const line1 = interpolate(frame, [15, 30], [0, 1], { extrapolateRight: 'clamp' });
-  const line2 = interpolate(frame, [35, 50], [0, 1], { extrapolateRight: 'clamp' });
-  const line3 = interpolate(frame, [55, 70], [0, 1], { extrapolateRight: 'clamp' });
-  const answer = interpolate(frame, [80, 100], [0, 1], { extrapolateRight: 'clamp' });
+  const headerOpacity = interpolate(frame, [0, 25], [0, 1], { extrapolateRight: 'clamp' });
+  const line1 = interpolate(frame, [30, 55], [0, 1], { extrapolateRight: 'clamp' });
+  const line2 = interpolate(frame, [65, 90], [0, 1], { extrapolateRight: 'clamp' });
+  const line3 = interpolate(frame, [100, 125], [0, 1], { extrapolateRight: 'clamp' });
+  const answer = interpolate(frame, [160, 195], [0, 1], { extrapolateRight: 'clamp' });
 
   const textStyle = {
     fontSize: 20,
@@ -50,7 +50,7 @@ export const ProblemScene: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ ...textStyle, opacity: line1 }}>
           <span style={{ color: status.rejected, fontFamily: font.mono, fontSize: 14, marginRight: 12 }}>01</span>
           No independent verification before on-chain execution
