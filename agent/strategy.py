@@ -54,6 +54,11 @@ class SwapIntent:
                 },
             },
             "slippage_bps": self.slippage_bps,
+            "validTo": self.deadline,
+            "metadata": {
+                "ttl_secs": SWAP_DEADLINE_SECS,
+                "generated_at_unix": int(time.time()),
+            },
         }
 
 

@@ -1,5 +1,7 @@
 {
-  "run_timestamp": "2026-03-17T15:57:19.027719+00:00",
+  "run_timestamp": "2026-03-17T18:23:48.529291+00:00",
+  "uniswap_mode": "live",
+  "uniswap_chain_id": 11155111,
   "portfolio": {
     "balances": {
       "WETH": 1.0,
@@ -17,7 +19,7 @@
   },
   "trades": [
     {
-      "timestamp": "2026-03-17T15:57:19.027499+00:00",
+      "timestamp": "2026-03-17T18:23:48.528981+00:00",
       "attempt": 1,
       "intent": "Swap 0.314286 WETH for USDC on Uniswap V3, max slippage 0.50%, deadline 30 minutes",
       "token_in": "WETH",
@@ -37,13 +39,18 @@
             "tokenOut": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
             "fee": 3000,
             "recipient": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18",
-            "deadline": 1773764836,
+            "deadline": 1773773578,
             "amountIn": 314285714285714304,
             "amountOutMinimum": 0,
             "sqrtPriceLimitX96": 0
           }
         },
-        "slippage_bps": 50
+        "slippage_bps": 50,
+        "validTo": 1773773578,
+        "metadata": {
+          "ttl_secs": 1800,
+          "generated_at_unix": 1773771828
+        }
       },
       "verification": {
         "decision": "PASS",
@@ -52,27 +59,27 @@
         "primary_failure_node": null,
         "llm_calls": 5,
         "passed_nodes": [
-          "legal_compliance.sanctions_screening",
           "adversarial_detection.mev_risky_parameters",
+          "intent_alignment.operation_matching",
+          "legal_compliance.sanctions_screening",
+          "legal_compliance.token_legitimacy",
           "technical_invariants.format_validation_lowlevel",
+          "intent_alignment.amount_matching",
+          "intent_alignment.deadline_consistency",
           "technical_invariants.protocol_compatibility",
-          "intent_alignment.slippage_tolerance"
+          "intent_alignment.slippage_tolerance",
+          "intent_alignment.element_matching",
+          "adversarial_detection.intent_manipulation",
+          "intent_alignment.requirement_compliance",
+          "adversarial_detection.parameter_manipulation",
+          "adversarial_detection.consistency_analysis"
         ],
         "failed_nodes": [],
         "skipped_nodes": [
-          "intent_alignment.operation_matching",
-          "legal_compliance.token_legitimacy",
-          "intent_alignment.amount_matching",
-          "intent_alignment.fee_alignment",
-          "intent_alignment.deadline_consistency",
           "intent_alignment.approval_covers_primary",
+          "intent_alignment.fee_alignment",
           "intent_alignment.sequence_check",
-          "intent_alignment.token_matching",
-          "adversarial_detection.intent_manipulation",
-          "intent_alignment.element_matching",
-          "adversarial_detection.parameter_manipulation",
-          "intent_alignment.requirement_compliance",
-          "adversarial_detection.consistency_analysis"
+          "intent_alignment.token_matching"
         ],
         "explanation": {
           "summary": "Transaction validation passed. All required checks for uniswap protocol completed successfully.",
@@ -85,60 +92,60 @@
               "node_ids": []
             },
             "passed": {
-              "count": 5,
+              "count": 14,
               "nodes": [
-                "Legal Compliance: Sanctions Screening",
                 "Adversarial Detection: Mev Risky Parameters",
-                "Technical Invariants: Format Validation Lowlevel",
-                "Technical Invariants: Protocol Compatibility",
-                "Intent Alignment: Slippage Tolerance"
-              ],
-              "node_ids": [
-                "legal_compliance.sanctions_screening",
-                "adversarial_detection.mev_risky_parameters",
-                "technical_invariants.format_validation_lowlevel",
-                "technical_invariants.protocol_compatibility",
-                "intent_alignment.slippage_tolerance"
-              ]
-            },
-            "skipped": {
-              "count": 13,
-              "nodes": [
                 "Intent Alignment: Operation Matching",
+                "Legal Compliance: Sanctions Screening",
                 "Legal Compliance: Token Legitimacy",
+                "Technical Invariants: Format Validation Lowlevel",
                 "Intent Alignment: Amount Matching",
-                "Intent Alignment: Fee Alignment",
                 "Intent Alignment: Deadline Consistency",
-                "Intent Alignment: Approval Covers Primary",
-                "Intent Alignment: Sequence Check",
-                "Intent Alignment: Token Matching",
-                "Adversarial Detection: Intent Manipulation",
+                "Technical Invariants: Protocol Compatibility",
+                "Intent Alignment: Slippage Tolerance",
                 "Intent Alignment: Element Matching",
-                "Adversarial Detection: Parameter Manipulation",
+                "Adversarial Detection: Intent Manipulation",
                 "Intent Alignment: Requirement Compliance",
+                "Adversarial Detection: Parameter Manipulation",
                 "Adversarial Detection: Consistency Analysis"
               ],
               "node_ids": [
+                "adversarial_detection.mev_risky_parameters",
                 "intent_alignment.operation_matching",
+                "legal_compliance.sanctions_screening",
                 "legal_compliance.token_legitimacy",
+                "technical_invariants.format_validation_lowlevel",
                 "intent_alignment.amount_matching",
-                "intent_alignment.fee_alignment",
                 "intent_alignment.deadline_consistency",
-                "intent_alignment.approval_covers_primary",
-                "intent_alignment.sequence_check",
-                "intent_alignment.token_matching",
-                "adversarial_detection.intent_manipulation",
+                "technical_invariants.protocol_compatibility",
+                "intent_alignment.slippage_tolerance",
                 "intent_alignment.element_matching",
-                "adversarial_detection.parameter_manipulation",
+                "adversarial_detection.intent_manipulation",
                 "intent_alignment.requirement_compliance",
+                "adversarial_detection.parameter_manipulation",
                 "adversarial_detection.consistency_analysis"
+              ]
+            },
+            "skipped": {
+              "count": 4,
+              "nodes": [
+                "Intent Alignment: Approval Covers Primary",
+                "Intent Alignment: Fee Alignment",
+                "Intent Alignment: Sequence Check",
+                "Intent Alignment: Token Matching"
+              ],
+              "node_ids": [
+                "intent_alignment.approval_covers_primary",
+                "intent_alignment.fee_alignment",
+                "intent_alignment.sequence_check",
+                "intent_alignment.token_matching"
               ]
             }
           },
           "confidence_summary": {
-            "min": 0.8,
+            "min": 0.75,
             "max": 1.0,
-            "avg": 0.9055555555555556
+            "avg": 0.9249999999999999
           },
           "recommendations": [
             "Transaction appears valid. Proceed with caution and review gas limits."
@@ -147,15 +154,23 @@
             "protocol": "uniswap",
             "total_nodes": 18,
             "failed_nodes": 0,
-            "passed_nodes": 5,
-            "skipped_nodes": 13,
+            "passed_nodes": 14,
+            "skipped_nodes": 4,
             "early_stop": false,
             "early_stop_node": null,
             "llm_calls": 5
           }
         }
       },
-      "execution": null
+      "execution": {
+        "mode": "live",
+        "success": false,
+        "tx_hash": "5e51fe2002e52c8e6865c7c7c7c853a98f0f81d42464765ade885e42ae93dd7c",
+        "block_number": 10465255,
+        "gas_used": 26060,
+        "explorer_url": "https://sepolia.etherscan.io/tx/0x5e51fe2002e52c8e6865c7c7c7c853a98f0f81d42464765ade885e42ae93dd7c",
+        "error": null
+      }
     }
   ]
 }

@@ -261,7 +261,7 @@ def main():
 
     verified = sum(1 for r in records if r.get("verification", {}).get("decision") == "PASS")
     rejected = sum(1 for r in records if r.get("verification", {}).get("decision") == "REJECT")
-    executed = sum(1 for r in records if r.get("execution", {}).get("success"))
+    executed = sum(1 for r in records if (r.get("execution") or {}).get("success"))
     errors = sum(1 for r in records if "error" in r)
     print(f"Verified: {verified} | Rejected: {rejected} | Executed: {executed} | Errors: {errors}")
 
