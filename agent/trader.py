@@ -1,7 +1,6 @@
 """
 Main trading agent loop.
-Strategy → construct intent → verify with Arbiter → log result.
-Day 2 adds: execute verified trades on Uniswap.
+Strategy -> construct intent -> verify with Arbiter -> execute on Uniswap -> log.
 """
 
 import json
@@ -17,6 +16,7 @@ from agent.config import (
     RETRY_SLIPPAGE_INCREASE_BPS,
 )
 from agent.strategy import Portfolio, SwapIntent, compute_rebalance_swaps, demo_portfolio
+from agent.uniswap_client import UniswapClient
 
 
 def _log_path() -> str:
@@ -59,13 +59,16 @@ def _build_trade_record(
 def run_once(
     portfolio: Portfolio | None = None,
     arbiter: ArbiterClient | None = None,
+    uniswap: UniswapClient | None = None,
+    execute: bool = True,
 ) -> list[dict]:
     """
     Run one rebalancing cycle:
     1. Evaluate portfolio drift
     2. Compute required swaps
     3. Verify each swap with Arbiter
-    4. Log results (execution happens in Day 2)
+    4. If verified, execute on Uniswap (or simulate)
+    5. Log full audit trail
 
     Returns list of trade records (for dashboard consumption).
     """
@@ -73,10 +76,13 @@ def run_once(
         portfolio = demo_portfolio()
     if arbiter is None:
         arbiter = ArbiterClient()
+    if uniswap is None:
+        uniswap = UniswapClient()
 
     print(f"\n{'='*60}")
     print(f"ARBITER GUARD - Rebalancing Cycle")
     print(f"Time: {datetime.now(timezone.utc).isoformat()}")
+    print(f"Uniswap mode: {uniswap.mode}")
     print(f"{'='*60}")
 
     # Show portfolio state
@@ -89,14 +95,14 @@ def run_once(
     # Compute swaps
     swaps = compute_rebalance_swaps(portfolio)
     if not swaps:
-        print("\nPortfolio within tolerance — no rebalancing needed.")
+        print("\nPortfolio within tolerance - no rebalancing needed.")
         return []
 
     print(f"\n{len(swaps)} swap(s) needed for rebalancing:")
     for s in swaps:
         print(f"  > {s.human_intent}")
 
-    # Verify each swap with Arbiter (with retry logic)
+    # Verify and execute each swap
     trade_records = []
     for swap in swaps:
         current_slippage = swap.slippage_bps
@@ -118,6 +124,7 @@ def run_once(
             print(f"\n--- Verifying swap (attempt {attempt}/{MAX_RETRIES}) ---")
             print(f"Intent: {swap.human_intent}")
 
+            # Step 1: Arbiter verification
             try:
                 result = arbiter.validate(
                     human_intent=swap.human_intent,
@@ -145,8 +152,59 @@ def run_once(
             print(f"  Passed: {len(result.passed_nodes)} | Failed: {len(result.failed_nodes)} | Skipped: {len(result.skipped_nodes)}")
 
             if result.passed:
-                print(f"  [PASS] VERIFIED - ready for execution")
-                record = _build_trade_record(swap, result, attempt)
+                print(f"  [PASS] VERIFIED")
+
+                # Step 2: Execute on Uniswap
+                execution = None
+                if execute:
+                    print(f"\n--- Executing on Uniswap ({uniswap.mode} mode) ---")
+
+                    # Get quote first
+                    try:
+                        quote = uniswap.get_quote(
+                            token_in=swap.token_in,
+                            token_out=swap.token_out,
+                            amount_in=swap.amount_in_raw,
+                            slippage_bps=swap.slippage_bps,
+                        )
+                        print(f"  Quote: {quote.amount_in} {swap.token_in} -> ~{quote.amount_out} {swap.token_out}")
+                        print(f"  Min output (after slippage): {quote.amount_out_minimum}")
+                    except Exception as e:
+                        print(f"  [WARN] Quote failed: {e}")
+                        quote = None
+
+                    # Execute swap
+                    swap_result = uniswap.execute_swap(
+                        token_in=swap.token_in,
+                        token_out=swap.token_out,
+                        amount_in=swap.amount_in_raw,
+                        amount_out_minimum=quote.amount_out_minimum if quote else 0,
+                        deadline=swap.deadline,
+                    )
+
+                    if swap_result.success:
+                        print(f"  [OK] Swap {'executed' if swap_result.mode == 'live' else 'simulated'}")
+                        print(f"  TxHash: {swap_result.tx_hash}")
+                        if swap_result.explorer_url:
+                            print(f"  Explorer: {swap_result.explorer_url}")
+                        if swap_result.block_number:
+                            print(f"  Block: {swap_result.block_number}")
+                        if swap_result.gas_used:
+                            print(f"  Gas used: {swap_result.gas_used}")
+                    else:
+                        print(f"  [FAIL] Swap failed: {swap_result.error}")
+
+                    execution = {
+                        "mode": swap_result.mode,
+                        "success": swap_result.success,
+                        "tx_hash": swap_result.tx_hash,
+                        "block_number": swap_result.block_number,
+                        "gas_used": swap_result.gas_used,
+                        "explorer_url": swap_result.explorer_url,
+                        "error": swap_result.error,
+                    }
+
+                record = _build_trade_record(swap, result, attempt, execution)
                 trade_records.append(record)
                 break
             else:
@@ -162,6 +220,8 @@ def run_once(
     log_file = _log_path()
     audit = {
         "run_timestamp": datetime.now(timezone.utc).isoformat(),
+        "uniswap_mode": uniswap.mode,
+        "uniswap_chain_id": uniswap.chain_id,
         "portfolio": {
             "balances": portfolio.balances,
             "prices": portfolio.prices,
@@ -178,8 +238,8 @@ def run_once(
 
 
 def main():
-    """Entry point — run one rebalancing cycle with the demo portfolio."""
-    # Check arbiter health first
+    """Entry point - run one rebalancing cycle with the demo portfolio."""
+    # Check arbiter health
     arbiter = ArbiterClient()
     try:
         health = arbiter.health()
@@ -189,14 +249,21 @@ def main():
         print("Make sure arbiter-core is running: python -m uvicorn api.server:app --port 8000")
         return
 
-    records = run_once(arbiter=arbiter)
+    # Initialize Uniswap client
+    uniswap = UniswapClient()
+    conn = uniswap.check_connection()
+    print(f"Uniswap: {'connected' if conn.get('connected') else 'disconnected'} "
+          f"(chain {conn.get('chain_id')}, {uniswap.mode} mode)")
+
+    records = run_once(arbiter=arbiter, uniswap=uniswap)
     print(f"\n{'='*60}")
     print(f"Cycle complete. {len(records)} trade(s) processed.")
 
     verified = sum(1 for r in records if r.get("verification", {}).get("decision") == "PASS")
     rejected = sum(1 for r in records if r.get("verification", {}).get("decision") == "REJECT")
+    executed = sum(1 for r in records if r.get("execution", {}).get("success"))
     errors = sum(1 for r in records if "error" in r)
-    print(f"Verified: {verified} | Rejected: {rejected} | Errors: {errors}")
+    print(f"Verified: {verified} | Rejected: {rejected} | Executed: {executed} | Errors: {errors}")
 
 
 if __name__ == "__main__":
