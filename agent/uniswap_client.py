@@ -21,6 +21,7 @@ from agent.config import (
 
 
 # Uniswap V3 SwapRouter ABI (exactInputSingle only)
+# SwapRouter02 ABI (Sepolia) — 7-param exactInputSingle (no deadline in struct)
 SWAP_ROUTER_ABI = json.loads("""[
     {
         "inputs": [
@@ -30,7 +31,6 @@ SWAP_ROUTER_ABI = json.loads("""[
                     {"name": "tokenOut", "type": "address"},
                     {"name": "fee", "type": "uint24"},
                     {"name": "recipient", "type": "address"},
-                    {"name": "deadline", "type": "uint256"},
                     {"name": "amountIn", "type": "uint256"},
                     {"name": "amountOutMinimum", "type": "uint256"},
                     {"name": "sqrtPriceLimitX96", "type": "uint160"}
@@ -273,7 +273,6 @@ class UniswapClient:
             "tokenOut": token_out_addr,
             "fee": fee,
             "recipient": self.wallet,
-            "deadline": deadline,
             "amountIn": amount_in,
             "amountOutMinimum": amount_out_minimum,
             "sqrtPriceLimitX96": 0,
@@ -378,8 +377,13 @@ class UniswapClient:
             swap_hash = self.w3.eth.send_raw_transaction(signed_swap.raw_transaction)
             receipt = self.w3.eth.wait_for_transaction_receipt(swap_hash, timeout=120)
 
+            tx_success = receipt["status"] == 1
+            error_msg = None
+            if not tx_success:
+                error_msg = f"Transaction reverted (status=0). Check {self.explorer_base}/tx/0x{swap_hash.hex()}"
+
             return SwapResult(
-                success=receipt["status"] == 1,
+                success=tx_success,
                 tx_hash=swap_hash.hex(),
                 block_number=receipt["blockNumber"],
                 gas_used=receipt["gasUsed"],
@@ -387,6 +391,7 @@ class UniswapClient:
                 amount_out=None,  # would need to decode logs for exact output
                 explorer_url=f"{self.explorer_base}/tx/0x{swap_hash.hex()}",
                 mode="live",
+                error=error_msg,
             )
         except Exception as e:
             return SwapResult(
