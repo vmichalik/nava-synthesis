@@ -227,7 +227,7 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
           fontFamily: S.sans, fontSize: { xs: 12, sm: 14 }, fontWeight: 700, color: colors.white,
           flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
-          {(trade as any).scenario
+          {(trade as any).scenario && v.decision !== 'PASS'
             ? <><span style={{ color: S.warn }}>{(trade as any).scenario}</span>{' '}</>
             : null
           }
