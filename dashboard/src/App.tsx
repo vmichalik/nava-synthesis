@@ -16,7 +16,7 @@ const S = {
     WebkitBackdropFilter: effects.blur,
     boxShadow: effects.cardShadow,
   },
-  mono: "'Muoto Mono', 'JetBrains Mono', monospace",
+  mono: "'Muoto Mono', monospace",
   sans: "'Muoto', sans-serif",
 }
 
@@ -533,17 +533,11 @@ function App() {
           flexWrap: 'wrap', gap: 2,
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {/* Logo mark */}
-            <Box sx={{
-              width: 36, height: 36, borderRadius: '10px',
-              background: gradients.buttonPrimary,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: effects.buttonShadow,
-            }}>
-              <Typography sx={{ fontFamily: S.sans, fontSize: 16, fontWeight: 700, color: colors.white }}>
-                N
-              </Typography>
-            </Box>
+            <img
+              src="/logomark-red.svg"
+              alt="Nava"
+              style={{ width: 32, height: 32 }}
+            />
             <Box>
               <Typography sx={{ fontFamily: S.sans, fontSize: 18, fontWeight: 700, color: colors.white, lineHeight: 1.2 }}>
                 Arbiter Guard
