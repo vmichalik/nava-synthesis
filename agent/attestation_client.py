@@ -152,7 +152,7 @@ class AttestationClient:
                 "from": account.address,
                 "nonce": nonce,
                 "chainId": self.chain_id,
-                "gas": 200000,
+                "gas": 300000,
                 "maxFeePerGas": self.w3.to_wei(30, "gwei"),
                 "maxPriorityFeePerGas": self.w3.to_wei(2, "gwei"),
             })

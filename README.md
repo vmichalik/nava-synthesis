@@ -47,8 +47,8 @@ In autonomous mode, the agent runs this loop continuously without anyone steerin
 |------|-------|
 | Attestation contract | [`0x708c384...`](https://sepolia.etherscan.io/address/0x708c3848f99a80732124344AebE6e9bBb5dA31D5) on Sepolia |
 | Agent identity (ERC-8004) | [`0x3ded514...`](https://basescan.org/tx/0x3ded5141bd9af5533b69d236e0821089c1806923ce3fb3aaf83fa755e431506e) on Base |
-| Example swap | [`0x7ea4878...`](https://sepolia.etherscan.io/tx/0x7ea4878204a110f1f2d9f2b4e4572332c976e13caabbbff2522d718e0b27242f) on Sepolia |
-| Example attestation | [`0x310169a...`](https://sepolia.etherscan.io/tx/0x310169a50d8247ca444d59b6722b1ba3a150aec816af004862930c8310793b92) on Sepolia |
+| Example swap | [`0x5fe65ca...`](https://sepolia.etherscan.io/tx/0x5fe65cada816936ba8329ded6f459d6807364b94230cbd8ce16bfb9411cd9036) on Sepolia |
+| Example attestation | [`0x065965...`](https://sepolia.etherscan.io/tx/0x0659653f76753e0a27a5a6c57e292048848f449b659c65b36fb5bb69d73e25d6) on Sepolia |
 
 The attestation contract exposes `getAgentReputation(address)`, so any other contract or agent can check this agent's pass rate, number of verified trades, and total nodes checked before deciding to interact.
 
@@ -62,6 +62,8 @@ The Arbiter runs 18 validation nodes. With LLM reasoning enabled, 14 of them act
 - **Is it legal?** Sanctions screening, token legitimacy
 
 A single critical failure stops everything. The trade never reaches Uniswap.
+
+The LLM reasoning behind each check can run through Venice for private inference. The verification logic stays private, only the pass/fail result and confidence score go on-chain.
 
 ## Running it
 
@@ -166,18 +168,22 @@ agent.json               ERC-8004 agent manifest
 
 **Let the Agent Cook** (Protocol Labs): Autonomous mode. Full decision loop, no human in the loop. ERC-8004 identity, agent manifest, structured logs, safety guardrails.
 
+**Private Agents, Trusted Actions** (Venice): The Arbiter's LLM semantic checks run through Venice's private inference. The reasoning stays private. Only the binary result goes on-chain.
+
 ## Stack
 
 | | |
 |-|-|
 | Agent | Python, autonomous decision loop |
-| Verification | Nava Arbiter, 18-node validation graph |
+| Verification | Nava Arbiter, 18-node validation graph (Venice or OpenAI) |
 | Execution | Uniswap V3 SwapRouter02, web3.py |
 | Attestation | ArbiterAttestation.sol, Foundry |
 | Identity | ERC-8004 on Base |
 | Dashboard | React, Vite |
 | Network | Ethereum Sepolia |
 
----
+## Try it
+
+Preview access to the Nava Arbiter is coming soon for agent builders. If you're building autonomous agents that move value on-chain and want independent verification before execution, reach out.
 
 [@navaai](https://x.com/navaai)

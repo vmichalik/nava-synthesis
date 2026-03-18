@@ -1,30 +1,31 @@
 {
-  "run_timestamp": "2026-03-17T18:38:24.344377+00:00",
+  "run_timestamp": "2026-03-18T11:14:12.340053+00:00",
   "uniswap_mode": "live",
   "uniswap_chain_id": 11155111,
+  "attestation_contract": "0x708c3848f99a80732124344AebE6e9bBb5dA31D5",
   "portfolio": {
     "balances": {
-      "WETH": 0.1,
-      "USDC": 0.0
+      "WETH": 0.41,
+      "USDC": 497.0
     },
     "prices": {
       "WETH": 2500.0,
       "USDC": 1.0
     },
-    "total_value_usd": 250.0,
+    "total_value_usd": 1522.0,
     "allocation": {
-      "WETH": 1.0,
-      "USDC": 0.0
+      "WETH": 0.6734559789750328,
+      "USDC": 0.32654402102496716
     }
   },
   "trades": [
     {
-      "timestamp": "2026-03-17T18:38:24.343949+00:00",
+      "timestamp": "2026-03-18T11:14:12.339765+00:00",
       "attempt": 1,
-      "intent": "Swap 0.040000 WETH for USDC on Uniswap V3, max slippage 0.50%, deadline 30 minutes",
+      "intent": "Swap 0.044720 WETH for USDC on Uniswap V3, slippage protection enabled, deadline 30 minutes",
       "token_in": "WETH",
       "token_out": "USDC",
-      "amount_in": 0.04,
+      "amount_in": 0.04472000000000001,
       "slippage_bps": 50,
       "chain_id": 11155111,
       "proposed_tx": {
@@ -39,17 +40,17 @@
             "tokenOut": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
             "fee": 3000,
             "recipient": "0x742d35Cc6634C0532925a3b844Bc9e7595f2bD18",
-            "deadline": 1773774472,
-            "amountIn": 40000000000000000,
-            "amountOutMinimum": 0,
+            "deadline": 1773834210,
+            "amountIn": 44720000000000008,
+            "amountOutMinimum": 44496400000000008,
             "sqrtPriceLimitX96": 0
           }
         },
         "slippage_bps": 50,
-        "validTo": 1773774472,
+        "validTo": 1773834210,
         "metadata": {
           "ttl_secs": 1800,
-          "generated_at_unix": 1773772704
+          "generated_at_unix": 1773832452
         }
       },
       "verification": {
@@ -59,26 +60,26 @@
         "primary_failure_node": null,
         "llm_calls": 5,
         "passed_nodes": [
+          "intent_alignment.operation_matching",
           "adversarial_detection.mev_risky_parameters",
           "legal_compliance.sanctions_screening",
-          "intent_alignment.operation_matching",
-          "legal_compliance.token_legitimacy",
           "technical_invariants.format_validation_lowlevel",
+          "legal_compliance.token_legitimacy",
           "intent_alignment.amount_matching",
           "intent_alignment.deadline_consistency",
           "technical_invariants.protocol_compatibility",
           "intent_alignment.slippage_tolerance",
-          "adversarial_detection.intent_manipulation",
           "intent_alignment.element_matching",
+          "adversarial_detection.intent_manipulation",
           "adversarial_detection.parameter_manipulation",
           "intent_alignment.requirement_compliance",
           "adversarial_detection.consistency_analysis"
         ],
         "failed_nodes": [],
         "skipped_nodes": [
-          "intent_alignment.sequence_check",
           "intent_alignment.approval_covers_primary",
           "intent_alignment.fee_alignment",
+          "intent_alignment.sequence_check",
           "intent_alignment.token_matching"
         ],
         "explanation": {
@@ -94,33 +95,33 @@
             "passed": {
               "count": 14,
               "nodes": [
+                "Intent Alignment: Operation Matching",
                 "Adversarial Detection: Mev Risky Parameters",
                 "Legal Compliance: Sanctions Screening",
-                "Intent Alignment: Operation Matching",
-                "Legal Compliance: Token Legitimacy",
                 "Technical Invariants: Format Validation Lowlevel",
+                "Legal Compliance: Token Legitimacy",
                 "Intent Alignment: Amount Matching",
                 "Intent Alignment: Deadline Consistency",
                 "Technical Invariants: Protocol Compatibility",
                 "Intent Alignment: Slippage Tolerance",
-                "Adversarial Detection: Intent Manipulation",
                 "Intent Alignment: Element Matching",
+                "Adversarial Detection: Intent Manipulation",
                 "Adversarial Detection: Parameter Manipulation",
                 "Intent Alignment: Requirement Compliance",
                 "Adversarial Detection: Consistency Analysis"
               ],
               "node_ids": [
+                "intent_alignment.operation_matching",
                 "adversarial_detection.mev_risky_parameters",
                 "legal_compliance.sanctions_screening",
-                "intent_alignment.operation_matching",
-                "legal_compliance.token_legitimacy",
                 "technical_invariants.format_validation_lowlevel",
+                "legal_compliance.token_legitimacy",
                 "intent_alignment.amount_matching",
                 "intent_alignment.deadline_consistency",
                 "technical_invariants.protocol_compatibility",
                 "intent_alignment.slippage_tolerance",
-                "adversarial_detection.intent_manipulation",
                 "intent_alignment.element_matching",
+                "adversarial_detection.intent_manipulation",
                 "adversarial_detection.parameter_manipulation",
                 "intent_alignment.requirement_compliance",
                 "adversarial_detection.consistency_analysis"
@@ -129,15 +130,15 @@
             "skipped": {
               "count": 4,
               "nodes": [
-                "Intent Alignment: Sequence Check",
                 "Intent Alignment: Approval Covers Primary",
                 "Intent Alignment: Fee Alignment",
+                "Intent Alignment: Sequence Check",
                 "Intent Alignment: Token Matching"
               ],
               "node_ids": [
-                "intent_alignment.sequence_check",
                 "intent_alignment.approval_covers_primary",
                 "intent_alignment.fee_alignment",
+                "intent_alignment.sequence_check",
                 "intent_alignment.token_matching"
               ]
             }
@@ -165,10 +166,17 @@
       "execution": {
         "mode": "live",
         "success": true,
-        "tx_hash": "7ea4878204a110f1f2d9f2b4e4572332c976e13caabbbff2522d718e0b27242f",
-        "block_number": 10465315,
-        "gas_used": 118438,
-        "explorer_url": "https://sepolia.etherscan.io/tx/0x7ea4878204a110f1f2d9f2b4e4572332c976e13caabbbff2522d718e0b27242f",
+        "tx_hash": "5fe65cada816936ba8329ded6f459d6807364b94230cbd8ce16bfb9411cd9036",
+        "block_number": 10469642,
+        "gas_used": 118424,
+        "explorer_url": "https://sepolia.etherscan.io/tx/0x5fe65cada816936ba8329ded6f459d6807364b94230cbd8ce16bfb9411cd9036",
+        "error": null
+      },
+      "attestation": {
+        "success": false,
+        "attestation_id": null,
+        "tx_hash": "0x277e1893788b3beaf8c7d908ff19d822a9d390f88ad970b53fb977763368ea2b",
+        "explorer_url": "https://sepolia.etherscan.io/tx/0x277e1893788b3beaf8c7d908ff19d822a9d390f88ad970b53fb977763368ea2b",
         "error": null
       }
     }

@@ -125,7 +125,7 @@ def run_once(
                 slippage_pct = current_slippage / 10000
                 swap.human_intent = (
                     f"Swap {swap.amount_in:.6f} {swap.token_in} for {swap.token_out} "
-                    f"on Uniswap V3, max slippage {slippage_pct:.2%}, deadline 30 minutes"
+                    f"on Uniswap V3, slippage protection enabled, deadline 30 minutes"
                 )
 
             print(f"\n--- Verifying swap (attempt {attempt}/{MAX_RETRIES}) ---")

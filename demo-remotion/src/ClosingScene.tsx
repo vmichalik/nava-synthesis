@@ -8,6 +8,7 @@ export const ClosingScene: React.FC = () => {
   const line = interpolate(frame, [15, 45], [0, 160], { extrapolateRight: 'clamp' });
   const details = interpolate(frame, [40, 70], [0, 1], { extrapolateRight: 'clamp' });
   const cta = interpolate(frame, [80, 110], [0, 1], { extrapolateRight: 'clamp' });
+  const preview = interpolate(frame, [110, 140], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill style={{
@@ -38,7 +39,7 @@ export const ClosingScene: React.FC = () => {
         }}>
           Every trade verified.
           <br />
-          Every decision auditable.
+          Every decision on-chain.
         </div>
       </div>
 
@@ -56,7 +57,7 @@ export const ClosingScene: React.FC = () => {
           fontSize: 18,
           marginBottom: 8,
         }}>
-          Arbiter Guard: Verified Autonomous Trading on Uniswap
+          Arbiter Guard
         </div>
         <div style={{
           color: 'rgba(255,255,255,0.4)',
@@ -69,7 +70,7 @@ export const ClosingScene: React.FC = () => {
 
       <div style={{
         opacity: cta,
-        marginTop: 40,
+        marginTop: 30,
         display: 'flex',
         gap: 24,
         alignItems: 'center',
@@ -91,6 +92,16 @@ export const ClosingScene: React.FC = () => {
         }}>
           x.com/navaai
         </div>
+      </div>
+
+      <div style={{
+        opacity: preview,
+        marginTop: 24,
+        color: 'rgba(255,255,255,0.3)',
+        fontSize: 13,
+        fontFamily: font.mono,
+      }}>
+        Preview access for agent builders coming soon
       </div>
     </AbsoluteFill>
   );

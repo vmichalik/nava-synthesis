@@ -40,7 +40,6 @@ export const TerminalScene: React.FC = () => {
         overflow: 'hidden',
         boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
       }}>
-        {/* Title bar */}
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -56,35 +55,30 @@ export const TerminalScene: React.FC = () => {
           </div>
         </div>
 
-        {/* Terminal content - real data */}
         <div style={{ padding: '16px 20px', maxHeight: 420, overflow: 'hidden' }}>
           <Line text="$ python -m agent.trader" color={status.info} delay={15} />
-          <Line text="Arbiter status: ok (LLM: openai)" color="rgba(255,255,255,0.5)" delay={25} />
-          <Line text="Uniswap: connected (chain 11155111, live mode)" color="rgba(255,255,255,0.5)" delay={30} />
+          <Line text="Arbiter: ok (LLM: enabled) | Uniswap: live (Sepolia)" color="rgba(255,255,255,0.5)" delay={25} />
           <Line text="" delay={35} />
-          <Line text="============================================================" color="rgba(255,255,255,0.2)" delay={40} />
-          <Line text="ARBITER GUARD - Rebalancing Cycle" color={colors.white} delay={45} />
-          <Line text="============================================================" color="rgba(255,255,255,0.2)" delay={48} />
-          <Line text="" delay={52} />
-          <Line text="Portfolio: $250.00" color={colors.white} delay={55} />
-          <Line text="  WETH: 0.100000 (100.0%)" color={status.pending} delay={62} />
-          <Line text="  USDC: 0.000000 (0.0%)" color={status.pending} delay={67} />
-          <Line text="" delay={75} />
-          <Line text="1 swap needed: 0.04 WETH -> USDC on Uniswap V3" color={status.approved} delay={80} />
-          <Line text="" delay={90} />
-          <Line text="--- Verifying swap (attempt 1/3) ---" color={status.info} delay={95} />
-          <Line text="  Decision: PASS" color={status.approved} delay={110} />
-          <Line text="  Passed: 14 | Failed: 0 | Skipped: 4" color={colors.white} delay={118} />
-          <Line text="  [PASS] VERIFIED" color={status.approved} delay={128} />
-          <Line text="" delay={140} />
-          <Line text="--- Executing on Uniswap (live mode) ---" color={status.info} delay={145} />
-          <Line text="  Quote: 0.04 WETH -> ~221.44 USDC" color={colors.white} delay={155} />
-          <Line text="  [OK] Token approval confirmed" color={status.approved} delay={170} />
-          <Line text="  [OK] Swap executed on Sepolia" color={status.approved} delay={185} />
-          <Line text="  TxHash: 0x7ea4878...0b27242f" color={status.approved} delay={195} />
-          <Line text="  Block: 10465315 | Gas: 118,438" color={colors.white} delay={210} />
-          <Line text="" delay={225} />
-          <Line text="Verified: 1 | Rejected: 0 | Executed: 1" color={status.approved} delay={235} />
+          <Line text="Portfolio: $1,522" color={colors.white} delay={40} />
+          <Line text="  WETH  0.41  (67.3%)   USDC  497  (32.7%)" color={status.pending} delay={50} />
+          <Line text="" delay={60} />
+          <Line text="Rebalancing: Swap 0.0447 WETH -> USDC" color={status.approved} delay={65} />
+          <Line text="" delay={78} />
+          <Line text="Verifying with Arbiter..." color={status.info} delay={85} />
+          <Line text="  Decision: PASS" color={status.approved} delay={100} />
+          <Line text="  14 passed | 0 failed | 4 skipped" color={colors.white} delay={110} />
+          <Line text="  [PASS] VERIFIED" color={status.approved} delay={120} />
+          <Line text="" delay={135} />
+          <Line text="Executing on Uniswap..." color={status.info} delay={140} />
+          <Line text="  0.0447 WETH -> 246.13 USDC" color={colors.white} delay={150} />
+          <Line text="  [OK] Swap executed" color={status.approved} delay={165} />
+          <Line text="  TX: 0x5fe65c...cd9036  Block: 10469642" color={status.approved} delay={175} />
+          <Line text="" delay={190} />
+          <Line text="Recording attestation..." color={status.info} delay={195} />
+          <Line text="  [OK] Attested on-chain" color={status.approved} delay={210} />
+          <Line text="  TX: 0x065965...e25d6" color={status.approved} delay={220} />
+          <Line text="" delay={235} />
+          <Line text="Verified: 1 | Executed: 1 | Attested: 1" color={status.approved} delay={240} />
         </div>
       </div>
     </AbsoluteFill>

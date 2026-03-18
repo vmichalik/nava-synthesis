@@ -64,7 +64,6 @@ export const DashboardScene: React.FC = () => {
       fontFamily: font.primary,
       padding: 50,
     }}>
-      {/* Header */}
       <div style={{ opacity: headerOpacity, marginBottom: 24 }}>
         <div style={{ color: colors.red, fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', fontFamily: font.mono, textTransform: 'uppercase' as const }}>
           NAVA
@@ -74,17 +73,15 @@ export const DashboardScene: React.FC = () => {
         </div>
       </div>
 
-      {/* Stats row */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <StatCard label="Total Value" value="$250" color={colors.white} delay={15} />
+        <StatCard label="Portfolio" value="$1,522" color={colors.white} delay={15} />
         <StatCard label="Verified" value="1" color={status.approved} delay={25} />
-        <StatCard label="Rejected" value="0" color={status.rejected} delay={35} />
-        <StatCard label="Executed" value="1" color={status.approved} delay={45} />
+        <StatCard label="Executed" value="1" color={status.approved} delay={35} />
+        <StatCard label="Attested" value="1" color={status.approved} delay={45} />
         <StatCard label="Mode" value="LIVE" color={status.approved} delay={55} />
       </div>
 
       <div style={{ display: 'flex', gap: 20 }}>
-        {/* Portfolio card */}
         <div style={{
           opacity: interpolate(frame, [30, 50], [0, 1], { extrapolateRight: 'clamp' }),
           width: 280,
@@ -96,17 +93,17 @@ export const DashboardScene: React.FC = () => {
           <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 16 }}>
             PORTFOLIO
           </div>
-          <div style={{ color: colors.white, fontSize: 24, fontWeight: 700, marginBottom: 20 }}>$250</div>
+          <div style={{ color: colors.white, fontSize: 24, fontWeight: 700, marginBottom: 20 }}>$1,522</div>
 
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ color: colors.white, fontSize: 13, fontWeight: 700 }}>WETH</span>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>100%</span>
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>67.3%</span>
             </div>
             <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3 }}>
               <div style={{
                 height: '100%',
-                width: `${interpolate(frame, [50, 70], [0, 100], { extrapolateRight: 'clamp' })}%`,
+                width: `${interpolate(frame, [50, 70], [0, 67.3], { extrapolateRight: 'clamp' })}%`,
                 background: status.pending,
                 borderRadius: 3,
               }} />
@@ -116,20 +113,39 @@ export const DashboardScene: React.FC = () => {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ color: colors.white, fontSize: 13, fontWeight: 700 }}>USDC</span>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>0%</span>
+              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>32.7%</span>
             </div>
             <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3 }}>
               <div style={{
                 height: '100%',
-                width: '0%',
+                width: `${interpolate(frame, [50, 70], [0, 32.7], { extrapolateRight: 'clamp' })}%`,
                 background: colors.red,
                 borderRadius: 3,
               }} />
             </div>
           </div>
+
+          {/* On-chain reputation */}
+          <div style={{
+            opacity: interpolate(frame, [80, 95], [0, 1], { extrapolateRight: 'clamp' }),
+            marginTop: 20,
+            padding: '10px 12px',
+            background: 'rgba(52,211,153,0.06)',
+            border: `1px solid rgba(52,211,153,0.15)`,
+            borderRadius: 8,
+          }}>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 6 }}>
+              ON-CHAIN REPUTATION
+            </div>
+            <div style={{ color: status.approved, fontSize: 13, fontWeight: 700 }}>
+              12 attestations
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>
+              queryable by any contract
+            </div>
+          </div>
         </div>
 
-        {/* Trade detail card */}
         <div style={{
           opacity: interpolate(frame, [45, 65], [0, 1], { extrapolateRight: 'clamp' }),
           flex: 1,
@@ -150,7 +166,7 @@ export const DashboardScene: React.FC = () => {
               fontFamily: font.mono,
             }}>PASS</span>
             <span style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>
-              0.04 WETH -&gt; USDC
+              0.0447 WETH -&gt; 246.13 USDC
             </span>
             <span style={{
               marginLeft: 'auto',
@@ -160,7 +176,7 @@ export const DashboardScene: React.FC = () => {
               border: `1px solid ${status.approved}40`,
               borderRadius: 999,
               fontFamily: font.mono,
-            }}>EXECUTED</span>
+            }}>EXECUTED + ATTESTED</span>
           </div>
 
           <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 8 }}>
@@ -175,7 +191,6 @@ export const DashboardScene: React.FC = () => {
           <NodeRow name="consistency_analysis" st="PASS" delay={118} />
           <NodeRow name="element_matching" st="PASS" delay={126} />
 
-          {/* Real tx hash */}
           <div style={{
             opacity: interpolate(frame, [140, 155], [0, 1], { extrapolateRight: 'clamp' }),
             marginTop: 12,
@@ -186,9 +201,15 @@ export const DashboardScene: React.FC = () => {
             fontSize: 11,
             fontFamily: font.mono,
           }}>
-            <span style={{ color: 'rgba(255,255,255,0.4)' }}>Sepolia TX: </span>
-            <span style={{ color: status.approved }}>0x7ea4878...0b27242f</span>
-            <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 12 }}>Block 10465315</span>
+            <div style={{ marginBottom: 4 }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}>Swap TX: </span>
+              <span style={{ color: status.approved }}>0x5fe65c...cd9036</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 12 }}>Block 10469642</span>
+            </div>
+            <div>
+              <span style={{ color: 'rgba(255,255,255,0.4)' }}>Attestation: </span>
+              <span style={{ color: status.approved }}>0x065965...e25d6</span>
+            </div>
           </div>
         </div>
       </div>
