@@ -56,7 +56,7 @@ function Tag({ label, color }: { label: string; color: string }) {
 function Metric({ label, value, color, sub }: { label: string; value: string | number; color?: string; sub?: string }) {
   return (
     <Box sx={{
-      ...S.glass, borderRadius: '12px', p: 2.5, flex: 1, minWidth: 120,
+      ...S.glass, borderRadius: '12px', p: { xs: 1.5, sm: 2.5 }, flex: '1 1 100px', minWidth: { xs: 80, sm: 120 },
       border: '1px solid rgba(255,255,255,0.04)',
     }}>
       <Typography sx={{
@@ -67,7 +67,7 @@ function Metric({ label, value, color, sub }: { label: string; value: string | n
         {label}
       </Typography>
       <Typography sx={{
-        fontFamily: S.sans, fontSize: 28, fontWeight: 700,
+        fontFamily: S.sans, fontSize: { xs: 20, sm: 28 }, fontWeight: 700,
         color: color || colors.white, lineHeight: 1,
       }}>
         {value}
@@ -203,9 +203,9 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
       <Box
         onClick={() => setOpen(!open)}
         sx={{
-          px: 2.5, py: 1.5,
+          px: { xs: 1.5, sm: 2.5 }, py: 1.5,
           borderBottom: open ? '1px solid rgba(255,255,255,0.04)' : 'none',
-          display: 'flex', alignItems: 'center', gap: 1.5,
+          display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap',
           cursor: 'pointer',
           userSelect: 'none',
           '&:hover': { background: 'rgba(255,255,255,0.02)' },
@@ -255,9 +255,13 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
       )}
 
       <Collapse in={open}>
-      <Box sx={{ display: 'flex' }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
         {/* Left: nodes */}
-        <Box sx={{ flex: '0 0 260px', p: 2.5, borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+        <Box sx={{
+          flex: { md: '0 0 260px' }, p: 2.5,
+          borderRight: { xs: 'none', md: '1px solid rgba(255,255,255,0.04)' },
+          borderBottom: { xs: '1px solid rgba(255,255,255,0.04)', md: 'none' },
+        }}>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 2 }}>
             <Typography sx={{ fontFamily: S.sans, fontSize: 32, fontWeight: 700, color: S.pass, lineHeight: 1 }}>
               {passed}
@@ -520,12 +524,13 @@ function App() {
         pointerEvents: 'none',
       }} />
 
-      <Box sx={{ maxWidth: 1200, mx: 'auto', px: 4, py: 4, position: 'relative' }}>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, sm: 3, md: 4 }, py: { xs: 2, md: 4 }, position: 'relative' }}>
 
         {/* ── Header ──────────────────────────────────── */}
         <Box sx={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           mb: 4, pb: 3, borderBottom: '1px solid rgba(255,255,255,0.04)',
+          flexWrap: 'wrap', gap: 2,
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             {/* Logo mark */}
@@ -612,9 +617,9 @@ function App() {
             </Box>
 
             {/* ── Body ───────────────────────────────── */}
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
               {/* Left: portfolio */}
-              <Box sx={{ flex: '0 0 300px' }}>
+              <Box sx={{ flex: { md: '0 0 300px' }, width: { xs: '100%', md: 'auto' } }}>
                 <Portfolio run={run} />
               </Box>
 
