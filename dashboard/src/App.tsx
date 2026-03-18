@@ -213,6 +213,10 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
         <Pulse color={v.decision === 'PASS' ? S.pass : S.fail} />
         <Tag label={v.decision} color={v.decision === 'PASS' ? S.pass : S.fail} />
         <Typography sx={{ fontFamily: S.sans, fontSize: 14, fontWeight: 700, color: colors.white, flex: 1 }}>
+          {(trade as any).scenario
+            ? <><span style={{ color: S.warn }}>{(trade as any).scenario}</span>{' '}</>
+            : null
+          }
           {trade.amount_in?.toFixed(4)} {trade.token_in} &rarr; {trade.token_out}
         </Typography>
         {e?.success && (
@@ -484,6 +488,8 @@ function App() {
     }
   }, [])
 
+  const [adversarialLoading, setAdversarialLoading] = useState(false)
+
   const triggerRun = async () => {
     setLoading(true)
     setError(null)
@@ -494,6 +500,19 @@ function App() {
       setError(`Failed to trigger run: ${e}`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const triggerAdversarial = async () => {
+    setAdversarialLoading(true)
+    setError(null)
+    try {
+      await fetch(`${API_BASE}/api/adversarial`, { method: 'POST' })
+      await fetchLatest()
+    } catch (e) {
+      setError(`Failed to trigger adversarial test: ${e}`)
+    } finally {
+      setAdversarialLoading(false)
     }
   }
 
@@ -573,10 +592,29 @@ function App() {
             >
               {loading ? 'running...' : 'rebalance'}
             </Button>
+            <Button
+              onClick={triggerAdversarial}
+              disabled={adversarialLoading || !apiOnline}
+              sx={{
+                fontFamily: S.mono, fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                px: 2.5, py: 1,
+                borderRadius: '999px',
+                background: adversarialLoading ? 'rgba(255,255,255,0.05)' : gradients.buttonSecondary,
+                color: colors.white,
+                backdropFilter: effects.blurButton,
+                boxShadow: effects.buttonShadow,
+                border: `1px solid ${S.fail}30`,
+                '&:hover': { background: `${S.fail}20`, borderColor: `${S.fail}50` },
+                '&:disabled': { opacity: 0.4 },
+              }}
+            >
+              {adversarialLoading ? 'testing...' : 'test attack'}
+            </Button>
           </Box>
         </Box>
 
-        {loading && <LinearProgress sx={{ mb: 2 }} />}
+        {(loading || adversarialLoading) && <LinearProgress sx={{ mb: 2 }} />}
         {error && <Alert severity="error" sx={{ mb: 2, fontSize: 12 }}>{error}</Alert>}
 
         {!apiOnline && !run && (
