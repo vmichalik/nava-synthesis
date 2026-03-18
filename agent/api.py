@@ -278,6 +278,36 @@ def status():
     return {"status": "ok", "trade_count": len(_trades)}
 
 
+def _get_portfolio():
+    """Read real balances from Sepolia."""
+    try:
+        from agent.uniswap_client import UniswapClient
+        uc = UniswapClient()
+        weth_raw = uc.get_balance("WETH")
+        usdc_raw = uc.get_balance("USDC")
+        weth = weth_raw / 1e18
+        usdc = usdc_raw / 1e6
+        weth_price = 2500.0
+        usdc_price = 1.0
+        total = weth * weth_price + usdc * usdc_price
+        return {
+            "balances": {"WETH": round(weth, 6), "USDC": round(usdc, 2)},
+            "prices": {"WETH": weth_price, "USDC": usdc_price},
+            "total_value_usd": round(total, 2),
+            "allocation": {
+                "WETH": round(weth * weth_price / total, 4) if total > 0 else 0,
+                "USDC": round(usdc * usdc_price / total, 4) if total > 0 else 0,
+            },
+        }
+    except Exception:
+        return {
+            "balances": {"WETH": 0, "USDC": 0},
+            "prices": {"WETH": 2500.0, "USDC": 1.0},
+            "total_value_usd": 0,
+            "allocation": {"WETH": 0, "USDC": 0},
+        }
+
+
 @app.get("/api/latest")
 def get_latest():
     """Return accumulated trades, newest first."""
@@ -287,12 +317,7 @@ def get_latest():
             "uniswap_mode": "live",
             "uniswap_chain_id": UNISWAP_CHAIN_ID,
             "attestation_contract": "0x708c3848f99a80732124344AebE6e9bBb5dA31D5",
-            "portfolio": {
-                "balances": {"WETH": 0.41, "USDC": 497.0},
-                "prices": {"WETH": 2500.0, "USDC": 1.0},
-                "total_value_usd": 1522.0,
-                "allocation": {"WETH": 0.6735, "USDC": 0.3265},
-            },
+            "portfolio": _get_portfolio(),
             "trades": _trades,
         }
     }
