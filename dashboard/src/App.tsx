@@ -3,7 +3,18 @@ import { Box, Typography, Button, LinearProgress, Alert, Tooltip, Collapse } fro
 import { colors, gradients, effects } from '@navalabs-dev/brand-mui'
 import type { AuditRun, TradeRecord } from './types'
 
-const API_BASE = 'http://localhost:8001'
+const API_BASE = 'http://localhost:8002'
+
+function timeAgo(iso: string): string {
+  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+  if (secs < 5) return 'just now'
+  if (secs < 60) return `${secs}s ago`
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`
+  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`
+  return new Date(iso).toLocaleDateString()
+}
+
+type PendingStep = 'verifying' | 'executing' | 'attesting' | null
 
 const S = {
   pass: '#34D399',
@@ -229,10 +240,10 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
           <Tag label="attested" color={S.pass} />
         )}
         <Typography sx={{
-          fontFamily: S.mono, fontSize: 11, color: 'rgba(255,255,255,0.25)',
-          ml: 1,
+          fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.2)',
+          ml: 'auto', flexShrink: 0,
         }}>
-          {passed}/{total}
+          {timeAgo(trade.timestamp)}
         </Typography>
         {/* Chevron */}
         <Box sx={{
@@ -472,6 +483,73 @@ function Portfolio({ run }: { run: AuditRun }) {
   )
 }
 
+/* ─── Pending card ───────────────────────────────────── */
+
+function PendingCard({ step, label }: { step: PendingStep; label: string }) {
+  const steps: { key: PendingStep; text: string }[] = [
+    { key: 'verifying', text: 'Verifying with Arbiter' },
+    { key: 'executing', text: 'Executing on Uniswap' },
+    { key: 'attesting', text: 'Recording attestation' },
+  ]
+  const currentIdx = steps.findIndex(s => s.key === step)
+
+  return (
+    <Box sx={{
+      ...S.glass, borderRadius: '16px', overflow: 'hidden',
+      border: `1px solid ${S.warn}25`,
+    }}>
+      <Box sx={{ px: { xs: 1.5, sm: 2.5 }, py: 1.5, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Box sx={{
+          width: 8, height: 8, borderRadius: '50%', background: S.warn,
+          animation: 'pulse 1s ease-in-out infinite',
+          '@keyframes pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.3 } },
+        }} />
+        <Tag label="pending" color={S.warn} />
+        <Typography sx={{ fontFamily: S.sans, fontSize: { xs: 12, sm: 14 }, fontWeight: 700, color: colors.white }}>
+          {label}
+        </Typography>
+        <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.2)', ml: 'auto' }}>
+          now
+        </Typography>
+      </Box>
+      <Box sx={{ px: { xs: 1.5, sm: 2.5 }, py: 2, display: 'flex', gap: { xs: 2, sm: 4 } }}>
+        {steps.map((s, i) => {
+          const isDone = i < currentIdx
+          const isActive = i === currentIdx
+          const color = isDone ? S.pass : isActive ? S.warn : 'rgba(255,255,255,0.15)'
+          return (
+            <Box key={s.key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{
+                width: 18, height: 18, borderRadius: '50%',
+                border: `2px solid ${color}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                ...(isActive && {
+                  animation: 'pulse 1s ease-in-out infinite',
+                }),
+              }}>
+                {isDone && (
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', background: S.pass }} />
+                )}
+                {isActive && (
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: S.warn }} />
+                )}
+              </Box>
+              <Typography sx={{
+                fontFamily: S.mono, fontSize: { xs: 9, sm: 10 }, fontWeight: 700,
+                letterSpacing: '0.05em', textTransform: 'uppercase',
+                color: isActive ? S.warn : isDone ? S.pass : 'rgba(255,255,255,0.2)',
+              }}>
+                {s.text}
+              </Typography>
+            </Box>
+          )
+        })}
+      </Box>
+      <LinearProgress sx={{ height: 2 }} color="warning" />
+    </Box>
+  )
+}
+
 /* ─── Main ───────────────────────────────────────────── */
 
 function App() {
@@ -493,15 +571,26 @@ function App() {
   }, [])
 
   const [adversarialLoading, setAdversarialLoading] = useState(false)
+  const [pendingStep, setPendingStep] = useState<PendingStep>(null)
+  const [pendingLabel, setPendingLabel] = useState('')
 
   const triggerRun = async () => {
     setLoading(true)
     setError(null)
+    setPendingLabel('Rebalance: 0.005 WETH -> USDC')
+    setPendingStep('verifying')
     try {
+      // Simulate step progression (API is synchronous, so we estimate timing)
+      const stepTimer = setTimeout(() => setPendingStep('executing'), 3000)
+      const stepTimer2 = setTimeout(() => setPendingStep('attesting'), 8000)
       await fetch(`${API_BASE}/api/run`, { method: 'POST' })
+      clearTimeout(stepTimer)
+      clearTimeout(stepTimer2)
+      setPendingStep(null)
       await fetchLatest()
     } catch (e) {
       setError(`Failed to trigger run: ${e}`)
+      setPendingStep(null)
     } finally {
       setLoading(false)
     }
@@ -510,11 +599,17 @@ function App() {
   const triggerAdversarial = async () => {
     setAdversarialLoading(true)
     setError(null)
+    setPendingLabel('Adversarial test')
+    setPendingStep('verifying')
     try {
+      const stepTimer = setTimeout(() => setPendingStep('attesting'), 3000)
       await fetch(`${API_BASE}/api/adversarial`, { method: 'POST' })
+      clearTimeout(stepTimer)
+      setPendingStep(null)
       await fetchLatest()
     } catch (e) {
       setError(`Failed to trigger adversarial test: ${e}`)
+      setPendingStep(null)
     } finally {
       setAdversarialLoading(false)
     }
@@ -661,7 +756,10 @@ function App() {
 
               {/* Right: trades */}
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
-                {trades.length === 0 ? (
+                {pendingStep && (
+                  <PendingCard step={pendingStep} label={pendingLabel} />
+                )}
+                {trades.length === 0 && !pendingStep ? (
                   <Box sx={{
                     ...S.glass, borderRadius: '16px', p: 4, textAlign: 'center',
                     border: '1px solid rgba(255,255,255,0.04)',
