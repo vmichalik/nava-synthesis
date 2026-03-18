@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Box, Typography, Button, LinearProgress, Alert } from '@mui/material'
+import { Box, Typography, Button, LinearProgress, Alert, Tooltip, Collapse } from '@mui/material'
 import { colors, gradients, effects } from '@navalabs-dev/brand-mui'
 import type { AuditRun, TradeRecord } from './types'
 
@@ -81,6 +81,33 @@ function Metric({ label, value, color, sub }: { label: string; value: string | n
   )
 }
 
+/* ─── Node descriptions ──────────────────────────────── */
+
+const NODE_DESC: Record<string, string> = {
+  'intent_alignment.operation_matching': 'Checks that the swap function matches what the user asked for',
+  'intent_alignment.token_matching': 'Verifies the token addresses match the requested pair',
+  'intent_alignment.amount_matching': 'Confirms the trade amount matches the user\'s intent',
+  'intent_alignment.slippage_tolerance': 'Validates slippage is within the user\'s tolerance',
+  'intent_alignment.deadline_consistency': 'Ensures the deadline hasn\'t expired',
+  'intent_alignment.fee_alignment': 'Checks the fee tier is appropriate for this pair',
+  'intent_alignment.element_matching': 'LLM cross-checks all extracted elements against the tx',
+  'intent_alignment.requirement_compliance': 'LLM verifies all stated requirements are met',
+  'intent_alignment.approval_covers_primary': 'Checks token approval covers the swap amount',
+  'intent_alignment.sequence_check': 'Validates approval comes before the swap',
+  'adversarial_detection.mev_risky_parameters': 'Flags parameters that expose the trade to MEV extraction',
+  'adversarial_detection.intent_manipulation': 'LLM checks if the intent was tampered with',
+  'adversarial_detection.parameter_manipulation': 'LLM detects adversarially tweaked parameters',
+  'adversarial_detection.consistency_analysis': 'LLM checks internal consistency of the transaction',
+  'technical_invariants.format_validation_lowlevel': 'Validates the transaction data is well-formed',
+  'technical_invariants.protocol_compatibility': 'Confirms the router is a known Uniswap contract',
+  'legal_compliance.sanctions_screening': 'Screens all addresses against OFAC sanctions list',
+  'legal_compliance.token_legitimacy': 'Checks tokens aren\'t known scams or honeypots',
+}
+
+function nodeLabel(name: string): string {
+  return name.split('.').pop()?.replace(/_/g, ' ') || name
+}
+
 /* ─── Node dot grid ──────────────────────────────────── */
 
 function NodeGrid({ trade }: { trade: TradeRecord }) {
@@ -93,7 +120,6 @@ function NodeGrid({ trade }: { trade: TradeRecord }) {
 
   const nodeColor = (s: string) => s === 'PASS' ? S.pass : s === 'FAIL' ? S.fail : S.skip
 
-  // Group by category
   const categories: Record<string, typeof nodes> = {}
   for (const n of nodes) {
     const cat = n.name.split('.')[0].replace(/_/g, ' ')
@@ -114,26 +140,42 @@ function NodeGrid({ trade }: { trade: TradeRecord }) {
           </Typography>
           <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
             {catNodes.map(n => (
-              <Box
+              <Tooltip
                 key={n.name}
-                title={`${n.name}: ${n.status}`}
-                sx={{
-                  width: 28, height: 28, borderRadius: '6px',
-                  background: `${nodeColor(n.status)}18`,
-                  border: `1px solid ${nodeColor(n.status)}30`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'default',
-                  '&:hover': {
-                    background: `${nodeColor(n.status)}30`,
-                    border: `1px solid ${nodeColor(n.status)}60`,
-                  },
-                }}
+                arrow
+                placement="top"
+                title={
+                  <Box sx={{ p: 0.5, maxWidth: 240 }}>
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 10, fontWeight: 700, color: nodeColor(n.status), mb: 0.3 }}>
+                      {nodeLabel(n.name)} — {n.status}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', lineHeight: 1.4 }}>
+                      {NODE_DESC[n.name] || n.name}
+                    </Typography>
+                  </Box>
+                }
               >
-                <Box sx={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: nodeColor(n.status),
-                }} />
-              </Box>
+                <Box
+                  sx={{
+                    width: 28, height: 28, borderRadius: '6px',
+                    background: `${nodeColor(n.status)}18`,
+                    border: `1px solid ${nodeColor(n.status)}30`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'default',
+                    transition: 'all 0.15s ease',
+                    '&:hover': {
+                      background: `${nodeColor(n.status)}30`,
+                      border: `1px solid ${nodeColor(n.status)}60`,
+                      transform: 'scale(1.15)',
+                    },
+                  }}
+                >
+                  <Box sx={{
+                    width: 8, height: 8, borderRadius: '50%',
+                    background: nodeColor(n.status),
+                  }} />
+                </Box>
+              </Tooltip>
             ))}
           </Box>
         </Box>
@@ -144,7 +186,8 @@ function NodeGrid({ trade }: { trade: TradeRecord }) {
 
 /* ─── Trade panel ────────────────────────────────────── */
 
-function TradePanel({ trade }: { trade: TradeRecord }) {
+function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen)
   const { verification: v, execution: e } = trade
   const passed = v.passed_nodes.length
   const total = passed + v.failed_nodes.length + v.skipped_nodes.length
@@ -153,13 +196,20 @@ function TradePanel({ trade }: { trade: TradeRecord }) {
     <Box sx={{
       ...S.glass, borderRadius: '16px', overflow: 'hidden',
       border: `1px solid ${v.decision === 'PASS' ? S.pass : S.fail}15`,
+      transition: 'border-color 0.2s ease',
+      '&:hover': { borderColor: `${v.decision === 'PASS' ? S.pass : S.fail}30` },
     }}>
-      {/* Header bar */}
-      <Box sx={{
-        px: 2.5, py: 1.5,
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-        display: 'flex', alignItems: 'center', gap: 1.5,
-      }}>
+      {/* Header bar - clickable */}
+      <Box
+        onClick={() => setOpen(!open)}
+        sx={{
+          px: 2.5, py: 1.5,
+          borderBottom: open ? '1px solid rgba(255,255,255,0.04)' : 'none',
+          display: 'flex', alignItems: 'center', gap: 1.5,
+          cursor: 'pointer',
+          userSelect: 'none',
+          '&:hover': { background: 'rgba(255,255,255,0.02)' },
+        }}>
         <Pulse color={v.decision === 'PASS' ? S.pass : S.fail} />
         <Tag label={v.decision} color={v.decision === 'PASS' ? S.pass : S.fail} />
         <Typography sx={{ fontFamily: S.sans, fontSize: 14, fontWeight: 700, color: colors.white, flex: 1 }}>
@@ -171,8 +221,40 @@ function TradePanel({ trade }: { trade: TradeRecord }) {
         {trade.attestation?.success && (
           <Tag label="attested" color={S.pass} />
         )}
+        <Typography sx={{
+          fontFamily: S.mono, fontSize: 11, color: 'rgba(255,255,255,0.25)',
+          ml: 1,
+        }}>
+          {passed}/{total}
+        </Typography>
+        {/* Chevron */}
+        <Box sx={{
+          width: 20, height: 20,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'rgba(255,255,255,0.3)',
+          transition: 'transform 0.2s ease',
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          fontSize: 16,
+          ml: 0.5,
+        }}>
+          &#9662;
+        </Box>
       </Box>
 
+      {/* Reason preview when collapsed */}
+      {!open && (
+        <Box sx={{ px: 2.5, py: 1, borderTop: '1px solid rgba(255,255,255,0.02)' }}>
+          <Typography sx={{
+            fontFamily: S.sans, fontSize: 12,
+            color: v.decision === 'PASS' ? 'rgba(255,255,255,0.3)' : `${S.fail}aa`,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {v.reason}
+          </Typography>
+        </Box>
+      )}
+
+      <Collapse in={open}>
       <Box sx={{ display: 'flex' }}>
         {/* Left: nodes */}
         <Box sx={{ flex: '0 0 260px', p: 2.5, borderRight: '1px solid rgba(255,255,255,0.04)' }}>
@@ -293,6 +375,7 @@ function TradePanel({ trade }: { trade: TradeRecord }) {
           )}
         </Box>
       </Box>
+      </Collapse>
     </Box>
   )
 }
@@ -548,8 +631,24 @@ function App() {
                   </Box>
                 ) : (
                   trades.map((trade, i) => (
-                    <TradePanel key={i} trade={trade} />
+                    <TradePanel key={i} trade={trade} defaultOpen={i === 0} />
                   ))
+                )}
+
+                {/* Scroll indicator */}
+                {trades.length > 2 && (
+                  <Box sx={{
+                    textAlign: 'center', py: 2,
+                    animation: 'bob 2s ease-in-out infinite',
+                    '@keyframes bob': { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(4px)' } },
+                  }}>
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
+                      SCROLL FOR MORE
+                    </Typography>
+                    <Typography sx={{ color: 'rgba(255,255,255,0.15)', fontSize: 16, lineHeight: 1, mt: 0.3 }}>
+                      &#9662;
+                    </Typography>
+                  </Box>
                 )}
               </Box>
             </Box>
