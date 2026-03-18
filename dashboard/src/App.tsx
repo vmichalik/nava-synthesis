@@ -212,7 +212,10 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
         }}>
         <Pulse color={v.decision === 'PASS' ? S.pass : S.fail} />
         <Tag label={v.decision} color={v.decision === 'PASS' ? S.pass : S.fail} />
-        <Typography sx={{ fontFamily: S.sans, fontSize: 14, fontWeight: 700, color: colors.white, flex: 1 }}>
+        <Typography sx={{
+          fontFamily: S.sans, fontSize: { xs: 12, sm: 14 }, fontWeight: 700, color: colors.white,
+          flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
           {(trade as any).scenario
             ? <><span style={{ color: S.warn }}>{(trade as any).scenario}</span>{' '}</>
             : null
@@ -262,7 +265,7 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' } }}>
         {/* Left: nodes */}
         <Box sx={{
-          flex: { md: '0 0 260px' }, p: 2.5,
+          flex: { md: '0 0 240px' }, p: { xs: 1.5, sm: 2.5 },
           borderRight: { xs: 'none', md: '1px solid rgba(255,255,255,0.04)' },
           borderBottom: { xs: '1px solid rgba(255,255,255,0.04)', md: 'none' },
         }}>
@@ -278,7 +281,7 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
         </Box>
 
         {/* Right: details */}
-        <Box sx={{ flex: 1, p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ flex: 1, p: { xs: 1.5, sm: 2.5 }, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
           {/* Intent */}
           <Box>
             <Typography sx={{
@@ -310,11 +313,12 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
           {/* Execution */}
           {e?.tx_hash && (
             <Box sx={{
-              p: 1.5, borderRadius: '8px',
+              p: { xs: 1, sm: 1.5 }, borderRadius: '8px',
               background: e.success ? `${S.pass}08` : `${S.fail}08`,
               border: `1px solid ${e.success ? S.pass : S.fail}15`,
+              overflow: 'hidden',
             }}>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', gap: { xs: 1.5, sm: 2 }, flexWrap: 'wrap' }}>
                 <Box>
                   <Typography sx={{ fontFamily: S.mono, fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 0.3 }}>
                     TX
@@ -407,7 +411,7 @@ function Portfolio({ run }: { run: AuditRun }) {
         PORTFOLIO
       </Typography>
 
-      <Typography sx={{ fontFamily: S.sans, fontSize: 36, fontWeight: 700, color: colors.white, mb: 3, lineHeight: 1 }}>
+      <Typography sx={{ fontFamily: S.sans, fontSize: { xs: 28, sm: 36 }, fontWeight: 700, color: colors.white, mb: 3, lineHeight: 1 }}>
         ${p.total_value_usd.toLocaleString()}
       </Typography>
 
@@ -567,7 +571,7 @@ function App() {
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, flexWrap: 'wrap' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
               <Pulse color={apiOnline ? S.pass : S.fail} />
               <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: apiOnline ? S.pass : S.fail, letterSpacing: '0.05em' }}>
@@ -656,7 +660,7 @@ function App() {
               </Box>
 
               {/* Right: trades */}
-              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
                 {trades.length === 0 ? (
                   <Box sx={{
                     ...S.glass, borderRadius: '16px', p: 4, textAlign: 'center',
@@ -672,21 +676,6 @@ function App() {
                   ))
                 )}
 
-                {/* Scroll indicator */}
-                {trades.length > 2 && (
-                  <Box sx={{
-                    textAlign: 'center', py: 2,
-                    animation: 'bob 2s ease-in-out infinite',
-                    '@keyframes bob': { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(4px)' } },
-                  }}>
-                    <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em' }}>
-                      SCROLL FOR MORE
-                    </Typography>
-                    <Typography sx={{ color: 'rgba(255,255,255,0.15)', fontSize: 16, lineHeight: 1, mt: 0.3 }}>
-                      &#9662;
-                    </Typography>
-                  </Box>
-                )}
               </Box>
             </Box>
 
