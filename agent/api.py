@@ -245,7 +245,7 @@ ADVERSARIAL_SCENARIOS = [
     {
         "name": "Expired deadline",
         "build": lambda: (
-            "Swap 0.01 WETH for USDC on Uniswap V3, deadline was 10 minutes ago",
+            f"Swap 0.01 WETH for USDC on Uniswap V3, deadline {datetime.fromtimestamp(int(time.time()) - 600, tz=timezone.utc).strftime('%H:%M UTC')}",
             {**_base_tx(), **{
                 "validTo": int(time.time()) - 600,
                 "call": {**_base_tx()["call"], "params": {
