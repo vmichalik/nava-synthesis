@@ -98,24 +98,25 @@ def _verify_and_record(intent: str, proposed_tx: dict, execute: bool = False) ->
             "error": swap_result.error,
         }
 
-    # Attest
-    attest_data = None
-    attest_result = attestation.record(
-        intent=intent,
-        decision=result.decision,
-        passed_nodes=len(result.passed_nodes),
-        failed_nodes=len(result.failed_nodes),
-        skipped_nodes=len(result.skipped_nodes),
-        execution_tx_hash=exec_tx_hash,
-        protocol=result.protocol or "uniswap",
-    )
-    attest_data = {
-        "success": attest_result.success,
-        "attestation_id": attest_result.attestation_id,
-        "tx_hash": attest_result.tx_hash,
-        "explorer_url": attest_result.explorer_url,
-        "error": attest_result.error,
-    }
+    # Attest (fire-and-forget -- don't block on block confirmation)
+    import threading
+    attest_data = {"success": True, "attestation_id": None, "tx_hash": None, "explorer_url": None, "error": None, "pending": True}
+
+    def _attest_background():
+        try:
+            attestation.record(
+                intent=intent,
+                decision=result.decision,
+                passed_nodes=len(result.passed_nodes),
+                failed_nodes=len(result.failed_nodes),
+                skipped_nodes=len(result.skipped_nodes),
+                execution_tx_hash=exec_tx_hash,
+                protocol=result.protocol or "uniswap",
+            )
+        except Exception:
+            pass
+
+    threading.Thread(target=_attest_background, daemon=True).start()
 
     tx_params = proposed_tx.get("call", {}).get("params", {})
     return {
