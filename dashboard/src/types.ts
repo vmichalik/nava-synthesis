@@ -41,6 +41,13 @@ export interface TradeRecord {
     explorer_url: string | null
     error: string | null
   } | null
+  attestation?: {
+    success: boolean
+    attestation_id: number | null
+    tx_hash: string | null
+    explorer_url: string | null
+    error: string | null
+  } | null
   error?: string
 }
 

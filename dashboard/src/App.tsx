@@ -1,239 +1,383 @@
 import { useState, useEffect, useCallback } from 'react'
-import {
-  Box,
-  Container,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Alert,
-  LinearProgress,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from '@mui/material'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { colors } from '@navalabs-dev/brand-mui'
+import { Box, Typography, Button, LinearProgress, Alert } from '@mui/material'
+import { colors, gradients, effects } from '@navalabs-dev/brand-mui'
 import type { AuditRun, TradeRecord } from './types'
 
 const API_BASE = 'http://localhost:8001'
 
-// Status colors from brand palette
-const statusColor = {
-  PASS: '#34D399',
-  FAIL: '#FE0600',
-  SKIP: '#94A3B8',
-  PENDING: '#F5A623',
+const S = {
+  pass: '#34D399',
+  fail: '#FE0600',
+  skip: '#94A3B8',
+  warn: '#F5A623',
+  glass: {
+    background: gradients.cardDark,
+    backdropFilter: effects.blur,
+    WebkitBackdropFilter: effects.blur,
+    boxShadow: effects.cardShadow,
+  },
+  mono: "'Muoto Mono', 'JetBrains Mono', monospace",
+  sans: "'Muoto', sans-serif",
 }
 
-function StatusChip({ status }: { status: string }) {
-  const color = status === 'PASS' ? 'success'
-    : status === 'REJECT' || status === 'FAIL' ? 'error'
-    : status === 'SKIP' ? 'info'
-    : 'warning'
-  return <Chip label={status} color={color} size="small" variant="outlined" />
-}
+/* ─── Tiny components ────────────────────────────────── */
 
-function StatCard({ label, value, color }: { label: string; value: string | number; color?: string }) {
+function Pulse({ color, size = 8 }: { color: string; size?: number }) {
   return (
-    <Card sx={{ flex: 1, minWidth: 140 }}>
-      <CardContent sx={{ textAlign: 'center', py: 2, '&:last-child': { pb: 2 } }}>
-        <Typography variant="overline" sx={{ mb: 1, display: 'block' }}>
-          {label}
-        </Typography>
-        <Typography variant="h3" sx={{ color: color || colors.white }}>
-          {value}
-        </Typography>
-      </CardContent>
-    </Card>
+    <Box sx={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <Box sx={{
+        position: 'absolute', inset: 0, borderRadius: '50%', background: color,
+        animation: 'pulse 2s ease-in-out infinite',
+        '@keyframes pulse': { '0%, 100%': { opacity: 1 }, '50%': { opacity: 0.4 } },
+      }} />
+    </Box>
   )
 }
 
-function PortfolioCard({ run }: { run: AuditRun }) {
-  const { portfolio } = run
+function Tag({ label, color }: { label: string; color: string }) {
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="overline" sx={{ mb: 2, display: 'block' }}>
-          Portfolio
-        </Typography>
-        <Typography variant="h4" sx={{ mb: 2 }}>
-          ${portfolio.total_value_usd.toLocaleString()}
-        </Typography>
-        {Object.entries(portfolio.balances).map(([token, balance]) => {
-          const alloc = portfolio.allocation[token] || 0
-          const price = portfolio.prices[token] || 0
-          return (
-            <Box key={token} sx={{ mb: 1.5 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                  {token}
-                </Typography>
-                <Typography variant="body2">
-                  {balance.toFixed(token === 'USDC' ? 2 : 6)} (${(balance * price).toLocaleString()})
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LinearProgress
-                  variant="determinate"
-                  value={alloc * 100}
-                  sx={{ flex: 1, height: 6 }}
-                  color={alloc > 0.6 ? 'warning' : 'primary'}
-                />
-                <Typography variant="caption" sx={{ minWidth: 40 }}>
-                  {(alloc * 100).toFixed(1)}%
-                </Typography>
-              </Box>
-            </Box>
-          )
-        })}
-      </CardContent>
-    </Card>
+    <Box sx={{
+      px: 1.2, py: 0.3,
+      border: `1px solid ${color}33`,
+      borderRadius: '999px',
+      color,
+      fontSize: 10,
+      fontWeight: 700,
+      letterSpacing: '0.08em',
+      fontFamily: S.mono,
+      textTransform: 'uppercase',
+      background: `${color}0a`,
+    }}>
+      {label}
+    </Box>
   )
 }
 
-function NodeTable({ trade }: { trade: TradeRecord }) {
-  const { verification } = trade
-  const allNodes = [
-    ...verification.passed_nodes.map(n => ({ name: n, status: 'PASS' })),
-    ...verification.failed_nodes.map(n => ({ name: n, status: 'FAIL' })),
-    ...verification.skipped_nodes.map(n => ({ name: n, status: 'SKIP' })),
-  ].sort((a, b) => {
-    const order = { FAIL: 0, PASS: 1, SKIP: 2 }
-    return (order[a.status as keyof typeof order] ?? 3) - (order[b.status as keyof typeof order] ?? 3)
-  })
-
+function Metric({ label, value, color, sub }: { label: string; value: string | number; color?: string; sub?: string }) {
   return (
-    <TableContainer>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Verification Node</TableCell>
-            <TableCell align="right">Status</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {allNodes.map((node) => (
-            <TableRow key={node.name}>
-              <TableCell>
-                <Typography variant="caption">{node.name}</Typography>
-              </TableCell>
-              <TableCell align="right">
-                <StatusChip status={node.status} />
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <Box sx={{
+      ...S.glass, borderRadius: '12px', p: 2.5, flex: 1, minWidth: 120,
+      border: '1px solid rgba(255,255,255,0.04)',
+    }}>
+      <Typography sx={{
+        fontFamily: S.mono, fontSize: 10, fontWeight: 700,
+        letterSpacing: '0.1em', textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.4)', mb: 1,
+      }}>
+        {label}
+      </Typography>
+      <Typography sx={{
+        fontFamily: S.sans, fontSize: 28, fontWeight: 700,
+        color: color || colors.white, lineHeight: 1,
+      }}>
+        {value}
+      </Typography>
+      {sub && (
+        <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.3)', mt: 0.5 }}>
+          {sub}
+        </Typography>
+      )}
+    </Box>
   )
 }
 
-function TradeCard({ trade }: { trade: TradeRecord }) {
-  const { verification, execution } = trade
-  const decision = verification?.decision || 'ERROR'
+/* ─── Node dot grid ──────────────────────────────────── */
+
+function NodeGrid({ trade }: { trade: TradeRecord }) {
+  const { verification: v } = trade
+  const nodes = [
+    ...v.passed_nodes.map(n => ({ name: n, status: 'PASS' as const })),
+    ...v.failed_nodes.map(n => ({ name: n, status: 'FAIL' as const })),
+    ...v.skipped_nodes.map(n => ({ name: n, status: 'SKIP' as const })),
+  ]
+
+  const nodeColor = (s: string) => s === 'PASS' ? S.pass : s === 'FAIL' ? S.fail : S.skip
+
+  // Group by category
+  const categories: Record<string, typeof nodes> = {}
+  for (const n of nodes) {
+    const cat = n.name.split('.')[0].replace(/_/g, ' ')
+    if (!categories[cat]) categories[cat] = []
+    categories[cat].push(n)
+  }
 
   return (
-    <Accordion>
-      <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'rgba(255,255,255,0.4)' }} />}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%', pr: 2 }}>
-          <StatusChip status={decision} />
-          <Typography variant="body1" sx={{ flex: 1 }}>
-            {trade.amount_in?.toFixed(6)} {trade.token_in} {'->'} {trade.token_out}
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+      {Object.entries(categories).map(([cat, catNodes]) => (
+        <Box key={cat}>
+          <Typography sx={{
+            fontFamily: S.mono, fontSize: 9, fontWeight: 700,
+            letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.3)', mb: 0.5,
+          }}>
+            {cat}
           </Typography>
-          {execution?.success && (
-            <Chip
-              label={execution.mode === 'live' ? 'EXECUTED' : 'SIMULATED'}
-              color={execution.mode === 'live' ? 'success' : 'info'}
-              size="small"
-              variant="outlined"
-            />
-          )}
-          <Typography variant="caption">
-            Attempt {trade.attempt}
-          </Typography>
+          <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+            {catNodes.map(n => (
+              <Box
+                key={n.name}
+                title={`${n.name}: ${n.status}`}
+                sx={{
+                  width: 28, height: 28, borderRadius: '6px',
+                  background: `${nodeColor(n.status)}18`,
+                  border: `1px solid ${nodeColor(n.status)}30`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'default',
+                  '&:hover': {
+                    background: `${nodeColor(n.status)}30`,
+                    border: `1px solid ${nodeColor(n.status)}60`,
+                  },
+                }}
+              >
+                <Box sx={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: nodeColor(n.status),
+                }} />
+              </Box>
+            ))}
+          </Box>
         </Box>
-      </AccordionSummary>
-      <AccordionDetails>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      ))}
+    </Box>
+  )
+}
+
+/* ─── Trade panel ────────────────────────────────────── */
+
+function TradePanel({ trade }: { trade: TradeRecord }) {
+  const { verification: v, execution: e } = trade
+  const passed = v.passed_nodes.length
+  const total = passed + v.failed_nodes.length + v.skipped_nodes.length
+
+  return (
+    <Box sx={{
+      ...S.glass, borderRadius: '16px', overflow: 'hidden',
+      border: `1px solid ${v.decision === 'PASS' ? S.pass : S.fail}15`,
+    }}>
+      {/* Header bar */}
+      <Box sx={{
+        px: 2.5, py: 1.5,
+        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        display: 'flex', alignItems: 'center', gap: 1.5,
+      }}>
+        <Pulse color={v.decision === 'PASS' ? S.pass : S.fail} />
+        <Tag label={v.decision} color={v.decision === 'PASS' ? S.pass : S.fail} />
+        <Typography sx={{ fontFamily: S.sans, fontSize: 14, fontWeight: 700, color: colors.white, flex: 1 }}>
+          {trade.amount_in?.toFixed(4)} {trade.token_in} &rarr; {trade.token_out}
+        </Typography>
+        {e?.success && (
+          <Tag label={e.mode === 'live' ? 'executed' : 'simulated'} color={e.mode === 'live' ? S.pass : S.skip} />
+        )}
+        {trade.attestation?.success && (
+          <Tag label="attested" color={S.pass} />
+        )}
+      </Box>
+
+      <Box sx={{ display: 'flex' }}>
+        {/* Left: nodes */}
+        <Box sx={{ flex: '0 0 260px', p: 2.5, borderRight: '1px solid rgba(255,255,255,0.04)' }}>
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 2 }}>
+            <Typography sx={{ fontFamily: S.sans, fontSize: 32, fontWeight: 700, color: S.pass, lineHeight: 1 }}>
+              {passed}
+            </Typography>
+            <Typography sx={{ fontFamily: S.mono, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+              / {total} checks
+            </Typography>
+          </Box>
+          <NodeGrid trade={trade} />
+        </Box>
+
+        {/* Right: details */}
+        <Box sx={{ flex: 1, p: 2.5, display: 'flex', flexDirection: 'column', gap: 2 }}>
           {/* Intent */}
           <Box>
-            <Typography variant="overline" sx={{ display: 'block', mb: 0.5 }}>
-              Intent
+            <Typography sx={{
+              fontFamily: S.mono, fontSize: 9, fontWeight: 700,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.3)', mb: 0.5,
+            }}>
+              INTENT
             </Typography>
-            <Typography variant="body2">{trade.intent}</Typography>
+            <Typography sx={{ fontFamily: S.sans, fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
+              {trade.intent}
+            </Typography>
           </Box>
 
-          {/* Verification summary */}
+          {/* Verification */}
           <Box>
-            <Typography variant="overline" sx={{ display: 'block', mb: 0.5 }}>
-              Verification
+            <Typography sx={{
+              fontFamily: S.mono, fontSize: 9, fontWeight: 700,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.3)', mb: 0.5,
+            }}>
+              ARBITER
             </Typography>
-            <Typography variant="body2">
-              {verification.reason}
+            <Typography sx={{ fontFamily: S.sans, fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.5 }}>
+              {v.reason}
             </Typography>
-            {(verification.explanation?.recommendations?.length ?? 0) > 0 && (
-              <Alert severity="info" sx={{ mt: 1 }}>
-                {verification.explanation!.recommendations.join(' ')}
-              </Alert>
-            )}
           </Box>
-
-          {/* Node breakdown */}
-          <NodeTable trade={trade} />
 
           {/* Execution */}
-          {execution && (
-            <Box>
-              <Typography variant="overline" sx={{ display: 'block', mb: 0.5 }}>
-                Execution ({execution.mode})
-              </Typography>
-              {execution.tx_hash && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                  <Typography variant="caption" sx={{ wordBreak: 'break-all' }}>
-                    TxHash: {execution.tx_hash}
+          {e?.tx_hash && (
+            <Box sx={{
+              p: 1.5, borderRadius: '8px',
+              background: e.success ? `${S.pass}08` : `${S.fail}08`,
+              border: `1px solid ${e.success ? S.pass : S.fail}15`,
+            }}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box>
+                  <Typography sx={{ fontFamily: S.mono, fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 0.3 }}>
+                    TX
                   </Typography>
-                  {execution.explorer_url && (
-                    <Typography variant="caption">
-                      <a
-                        href={execution.explorer_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ color: statusColor.PASS }}
-                      >
-                        View on Explorer
-                      </a>
-                    </Typography>
-                  )}
-                  {execution.block_number && (
-                    <Typography variant="caption">
-                      Block: {execution.block_number}
-                    </Typography>
-                  )}
-                  {execution.gas_used && (
-                    <Typography variant="caption">
-                      Gas: {execution.gas_used.toLocaleString()}
+                  {e.explorer_url ? (
+                    <a href={e.explorer_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                      <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: S.pass, '&:hover': { textDecoration: 'underline' } }}>
+                        {e.tx_hash.slice(0, 10)}...{e.tx_hash.slice(-6)}
+                      </Typography>
+                    </a>
+                  ) : (
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                      {e.tx_hash.slice(0, 10)}...{e.tx_hash.slice(-6)}
                     </Typography>
                   )}
                 </Box>
-              )}
-              {execution.error && (
-                <Alert severity="error" sx={{ mt: 1 }}>{execution.error}</Alert>
+                {e.block_number && (
+                  <Box>
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 0.3 }}>
+                      BLOCK
+                    </Typography>
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                      {e.block_number.toLocaleString()}
+                    </Typography>
+                  </Box>
+                )}
+                {e.gas_used && (
+                  <Box>
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 0.3 }}>
+                      GAS
+                    </Typography>
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                      {e.gas_used.toLocaleString()}
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          )}
+          {e?.error && (
+            <Alert severity="error" sx={{ fontSize: 12 }}>{e.error}</Alert>
+          )}
+
+          {/* Attestation */}
+          {trade.attestation?.tx_hash && (
+            <Box sx={{
+              p: 1.5, borderRadius: '8px',
+              background: `${S.pass}08`,
+              border: `1px solid ${S.pass}15`,
+            }}>
+              <Typography sx={{ fontFamily: S.mono, fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 0.3 }}>
+                ON-CHAIN ATTESTATION
+              </Typography>
+              {trade.attestation.explorer_url ? (
+                <a href={trade.attestation.explorer_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                  <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: S.pass, '&:hover': { textDecoration: 'underline' } }}>
+                    {trade.attestation.tx_hash.slice(0, 10)}...{trade.attestation.tx_hash.slice(-6)}
+                  </Typography>
+                </a>
+              ) : (
+                <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                  {trade.attestation.tx_hash}
+                </Typography>
               )}
             </Box>
           )}
         </Box>
-      </AccordionDetails>
-    </Accordion>
+      </Box>
+    </Box>
   )
 }
+
+/* ─── Portfolio ──────────────────────────────────────── */
+
+function Portfolio({ run }: { run: AuditRun }) {
+  const { portfolio: p } = run
+  const target = { WETH: 0.6, USDC: 0.4 }
+
+  return (
+    <Box sx={{
+      ...S.glass, borderRadius: '16px', p: 2.5,
+      border: '1px solid rgba(255,255,255,0.04)',
+    }}>
+      <Typography sx={{
+        fontFamily: S.mono, fontSize: 10, fontWeight: 700,
+        letterSpacing: '0.1em', textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.3)', mb: 2,
+      }}>
+        PORTFOLIO
+      </Typography>
+
+      <Typography sx={{ fontFamily: S.sans, fontSize: 36, fontWeight: 700, color: colors.white, mb: 3, lineHeight: 1 }}>
+        ${p.total_value_usd.toLocaleString()}
+      </Typography>
+
+      {Object.entries(p.balances).map(([token, balance]) => {
+        const alloc = p.allocation[token] || 0
+        const price = p.prices[token] || 0
+        const tgt = target[token as keyof typeof target] || 0
+        const drift = alloc - tgt
+        const driftColor = Math.abs(drift) > 0.05 ? S.warn : S.pass
+
+        return (
+          <Box key={token} sx={{ mb: 2.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.8 }}>
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+                <Typography sx={{ fontFamily: S.sans, fontSize: 15, fontWeight: 700, color: colors.white }}>
+                  {token}
+                </Typography>
+                <Typography sx={{ fontFamily: S.mono, fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                  {balance.toFixed(token === 'USDC' ? 0 : 4)}
+                </Typography>
+              </Box>
+              <Typography sx={{ fontFamily: S.mono, fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                ${(balance * price).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </Typography>
+            </Box>
+
+            {/* Allocation bar with target marker */}
+            <Box sx={{ position: 'relative', height: 6, background: 'rgba(255,255,255,0.06)', borderRadius: 3 }}>
+              <Box sx={{
+                height: '100%',
+                width: `${alloc * 100}%`,
+                background: driftColor,
+                borderRadius: 3,
+                transition: 'width 0.5s ease',
+              }} />
+              {/* Target marker */}
+              <Box sx={{
+                position: 'absolute',
+                left: `${tgt * 100}%`,
+                top: -2, height: 10, width: 2,
+                background: 'rgba(255,255,255,0.5)',
+                borderRadius: 1,
+              }} />
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+              <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: driftColor }}>
+                {(alloc * 100).toFixed(1)}%
+              </Typography>
+              <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>
+                target {(tgt * 100).toFixed(0)}%
+              </Typography>
+            </Box>
+          </Box>
+        )
+      })}
+    </Box>
+  )
+}
+
+/* ─── Main ───────────────────────────────────────────── */
 
 function App() {
   const [run, setRun] = useState<AuditRun | null>(null)
@@ -272,111 +416,153 @@ function App() {
     return () => clearInterval(interval)
   }, [fetchLatest])
 
-  // Compute stats
   const trades = run?.trades || []
   const verified = trades.filter(t => t.verification?.decision === 'PASS').length
   const rejected = trades.filter(t => t.verification?.decision === 'REJECT').length
   const executed = trades.filter(t => t.execution?.success).length
+  const attested = trades.filter(t => (t as any).attestation?.success).length
 
   return (
     <Box sx={{
       minHeight: '100vh',
-      background: 'linear-gradient(to bottom, #000000 60%, rgba(254, 6, 0, 0.03) 100%)',
+      background: '#000',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="overline" sx={{ color: colors.red, display: 'block', mb: 1 }}>
-            Nava
-          </Typography>
-          <Typography variant="h2" sx={{ mb: 1 }}>
-            Arbiter Guard
-          </Typography>
-          <Typography variant="body2">
-            Verified autonomous trading on Uniswap
-          </Typography>
-        </Box>
+      {/* Background glow */}
+      <Box sx={{
+        position: 'fixed', bottom: -200, left: '50%', transform: 'translateX(-50%)',
+        width: 1200, height: 600,
+        background: 'radial-gradient(ellipse, rgba(254,6,0,0.04) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
 
-        {/* Controls */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center' }}>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={triggerRun}
-            disabled={loading || !apiOnline}
-          >
-            {loading ? 'Running...' : 'Run Rebalance'}
-          </Button>
-          <Chip
-            label={apiOnline ? 'API Online' : 'API Offline'}
-            color={apiOnline ? 'success' : 'error'}
-            size="small"
-            variant="outlined"
-          />
-          {run && (
-            <Typography variant="caption" sx={{ ml: 'auto' }}>
-              Last run: {new Date(run.run_timestamp).toLocaleString()}
-            </Typography>
-          )}
+      <Box sx={{ maxWidth: 1200, mx: 'auto', px: 4, py: 4, position: 'relative' }}>
+
+        {/* ── Header ──────────────────────────────────── */}
+        <Box sx={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          mb: 4, pb: 3, borderBottom: '1px solid rgba(255,255,255,0.04)',
+        }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            {/* Logo mark */}
+            <Box sx={{
+              width: 36, height: 36, borderRadius: '10px',
+              background: gradients.buttonPrimary,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: effects.buttonShadow,
+            }}>
+              <Typography sx={{ fontFamily: S.sans, fontSize: 16, fontWeight: 700, color: colors.white }}>
+                N
+              </Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontFamily: S.sans, fontSize: 18, fontWeight: 700, color: colors.white, lineHeight: 1.2 }}>
+                Arbiter Guard
+              </Typography>
+              <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.3)', letterSpacing: '0.05em' }}>
+                verified autonomous trading
+              </Typography>
+            </Box>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+              <Pulse color={apiOnline ? S.pass : S.fail} />
+              <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: apiOnline ? S.pass : S.fail, letterSpacing: '0.05em' }}>
+                {apiOnline ? 'LIVE' : 'OFFLINE'}
+              </Typography>
+            </Box>
+            <Button
+              onClick={triggerRun}
+              disabled={loading || !apiOnline}
+              sx={{
+                fontFamily: S.mono, fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                px: 2.5, py: 1,
+                borderRadius: '999px',
+                background: loading ? 'rgba(255,255,255,0.05)' : gradients.buttonPrimary,
+                color: colors.white,
+                backdropFilter: effects.blurButton,
+                boxShadow: effects.buttonShadow,
+                '&:hover': { background: gradients.buttonPrimaryHover },
+                '&:disabled': { opacity: 0.4 },
+              }}
+            >
+              {loading ? 'running...' : 'rebalance'}
+            </Button>
+          </Box>
         </Box>
 
         {loading && <LinearProgress sx={{ mb: 2 }} />}
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        {error && <Alert severity="error" sx={{ mb: 2, fontSize: 12 }}>{error}</Alert>}
 
         {!apiOnline && !run && (
-          <Alert severity="warning" sx={{ mb: 3 }}>
-            Dashboard API is offline. Start it with: <code>python -m agent.api</code>
-          </Alert>
+          <Box sx={{
+            ...S.glass, borderRadius: '16px', p: 4, textAlign: 'center',
+            border: '1px solid rgba(255,255,255,0.04)',
+          }}>
+            <Typography sx={{ fontFamily: S.sans, fontSize: 15, color: 'rgba(255,255,255,0.5)', mb: 1 }}>
+              Dashboard API is offline
+            </Typography>
+            <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+              python -m agent.api
+            </Typography>
+          </Box>
         )}
 
         {run && (
           <>
-            {/* Stats row */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-              <StatCard label="Total Value" value={`$${run.portfolio.total_value_usd.toLocaleString()}`} />
-              <StatCard label="Verified" value={verified} color={statusColor.PASS} />
-              <StatCard label="Rejected" value={rejected} color={statusColor.FAIL} />
-              <StatCard label="Executed" value={executed} color={statusColor.PASS} />
-              <StatCard
+            {/* ── Metrics ────────────────────────────── */}
+            <Box sx={{ display: 'flex', gap: 1.5, mb: 3, flexWrap: 'wrap' }}>
+              <Metric label="Portfolio" value={`$${run.portfolio.total_value_usd.toLocaleString()}`} />
+              <Metric label="Verified" value={verified} color={S.pass} />
+              <Metric label="Rejected" value={rejected} color={rejected > 0 ? S.fail : 'rgba(255,255,255,0.2)'} />
+              <Metric label="Executed" value={executed} color={S.pass} />
+              <Metric label="Attested" value={attested} color={S.pass} />
+              <Metric
                 label="Mode"
-                value={run.uniswap_mode || 'simulation'}
-                color={run.uniswap_mode === 'live' ? statusColor.PASS : statusColor.SKIP}
+                value={run.uniswap_mode === 'live' ? 'LIVE' : 'SIM'}
+                color={run.uniswap_mode === 'live' ? S.pass : S.skip}
+                sub={`chain ${run.uniswap_chain_id}`}
               />
             </Box>
 
-            {/* Portfolio + Trades */}
-            <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-              {/* Portfolio */}
-              <Box sx={{ flex: '1 1 300px', minWidth: 300 }}>
-                <PortfolioCard run={run} />
+            {/* ── Body ───────────────────────────────── */}
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+              {/* Left: portfolio */}
+              <Box sx={{ flex: '0 0 300px' }}>
+                <Portfolio run={run} />
               </Box>
 
-              {/* Trades */}
-              <Box sx={{ flex: '2 1 500px', minWidth: 300 }}>
-                <Typography variant="overline" sx={{ display: 'block', mb: 1 }}>
-                  Trades ({trades.length})
-                </Typography>
+              {/* Right: trades */}
+              <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                 {trades.length === 0 ? (
-                  <Alert severity="info">No trades in this run.</Alert>
-                ) : (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {trades.map((trade, i) => (
-                      <TradeCard key={i} trade={trade} />
-                    ))}
+                  <Box sx={{
+                    ...S.glass, borderRadius: '16px', p: 4, textAlign: 'center',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                  }}>
+                    <Typography sx={{ fontFamily: S.sans, fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
+                      No trades in this run
+                    </Typography>
                   </Box>
+                ) : (
+                  trades.map((trade, i) => (
+                    <TradePanel key={i} trade={trade} />
+                  ))
                 )}
               </Box>
             </Box>
+
+            {/* ── Timestamp ──────────────────────────── */}
+            <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+              <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.2)' }}>
+                {new Date(run.run_timestamp).toLocaleString()}
+              </Typography>
+            </Box>
           </>
         )}
-
-        {/* Footer */}
-        <Box sx={{ mt: 6, pt: 3, borderTop: '1px solid rgba(255,255,255,0.04)', textAlign: 'center' }}>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.3)' }}>
-            Powered by Nava's Arbiter verification engine | @navaai
-          </Typography>
-        </Box>
-      </Container>
+      </Box>
     </Box>
   )
 }
