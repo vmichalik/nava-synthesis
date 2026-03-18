@@ -733,8 +733,21 @@ function App() {
         {run && (
           <>
             {/* ── Metrics ────────────────────────────── */}
+            {/* ── Strategy banner ──────────────────────── */}
+            <Box sx={{
+              ...S.glass, borderRadius: '12px', p: { xs: 1.5, sm: 2 }, mb: 2,
+              border: '1px solid rgba(255,255,255,0.04)',
+              display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap',
+            }}>
+              <Typography sx={{ fontFamily: S.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.3)' }}>
+                STRATEGY
+              </Typography>
+              <Typography sx={{ fontFamily: S.sans, fontSize: 13, color: 'rgba(255,255,255,0.6)' }}>
+                Maintain 60% WETH / 40% USDC. Rebalance when drift exceeds 5%. Every trade verified by the Arbiter before execution.
+              </Typography>
+            </Box>
+
             <Box sx={{ display: 'flex', gap: 1.5, mb: 3, flexWrap: 'wrap' }}>
-              <Metric label="Portfolio" value={`$${run.portfolio.total_value_usd.toLocaleString()}`} />
               <Metric label="Verified" value={verified} color={S.pass} />
               <Metric label="Rejected" value={rejected} color={rejected > 0 ? S.fail : 'rgba(255,255,255,0.2)'} />
               <Metric label="Executed" value={executed} color={S.pass} />
@@ -743,7 +756,7 @@ function App() {
                 label="Mode"
                 value={run.uniswap_mode === 'live' ? 'LIVE' : 'SIM'}
                 color={run.uniswap_mode === 'live' ? S.pass : S.skip}
-                sub={`chain ${run.uniswap_chain_id}`}
+                sub={`Sepolia`}
               />
             </Box>
 
