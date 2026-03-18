@@ -1,14 +1,16 @@
 # Arbiter Guard
 
-An autonomous trading agent that won't execute a trade unless an independent safety check says it's OK. If the check passes, the trade goes through and the result gets written on-chain as a permanent receipt. If it fails, the agent adjusts and tries again.
+An autonomous trading agent that checks every transaction against 18 independent safety rules before it touches the chain. Trades that pass get executed. Trades that fail get blocked. Both outcomes are recorded on-chain as permanent, queryable receipts.
 
 Built for [The Synthesis](https://synthesis.md/) by Vijay Michalik + Claude (Opus 4.6).
 
 ## How it works
 
-The agent wants to rebalance a portfolio on Uniswap. Before any swap hits the chain, the proposed trade goes through the Arbiter, a verification engine that checks the transaction against 18 independent safety rules. Things like: does this swap match what the user actually asked for? Is the slippage reasonable? Are the tokens legitimate? Is the recipient address sanctioned?
+The agent maintains a target portfolio allocation (60% WETH / 40% USDC) and rebalances when drift exceeds 5%. Before any swap goes through, the proposed transaction is sent to the Arbiter for verification.
 
-Only trades that pass all checks get executed. Every result, pass or fail, gets recorded on-chain as an attestation. That means anyone can look up this agent's track record and decide whether to trust it.
+The Arbiter checks whether the swap matches what was requested, whether the parameters are safe, whether the addresses are sanctioned, whether the routing contract is legitimate, and whether anyone has tampered with the intent. It runs 18 checks in total. If any critical check fails, the trade is blocked.
+
+After verification, the result (pass or reject) is posted on-chain as an attestation. Other agents or contracts can query this history to decide whether to trust this agent before interacting with it.
 
 ```
     Agent decides to trade
@@ -26,9 +28,9 @@ Only trades that pass all checks get executed. Every result, pass or fail, gets 
      PASS                FAIL
        |                   |
        v                   v
-  Execute swap       Adjust params
-  on Uniswap         and retry
-       |              (up to 3x)
+  Execute swap       Block trade
+  on Uniswap         (log reason)
+       |
        v
   Record attestation
   on-chain
@@ -39,31 +41,31 @@ Only trades that pass all checks get executed. Every result, pass or fail, gets 
   verification history
 ```
 
-In autonomous mode, the agent runs this loop continuously without anyone steering it.
+In autonomous mode, the agent runs this loop continuously without human intervention.
 
-## What's deployed
+## On-chain artifacts
 
 | What | Where |
 |------|-------|
 | Attestation contract | [`0x708c384...`](https://sepolia.etherscan.io/address/0x708c3848f99a80732124344AebE6e9bBb5dA31D5) on Sepolia |
 | Agent identity (ERC-8004) | [`0x3ded514...`](https://basescan.org/tx/0x3ded5141bd9af5533b69d236e0821089c1806923ce3fb3aaf83fa755e431506e) on Base |
-| Example swap | [`0x5fe65ca...`](https://sepolia.etherscan.io/tx/0x5fe65cada816936ba8329ded6f459d6807364b94230cbd8ce16bfb9411cd9036) on Sepolia |
-| Example attestation | [`0x065965...`](https://sepolia.etherscan.io/tx/0x0659653f76753e0a27a5a6c57e292048848f449b659c65b36fb5bb69d73e25d6) on Sepolia |
+| Example swap | [`0xaf9cb6...`](https://sepolia.etherscan.io/tx/0xaf9cb63873a68cb3ae9c5fe58c748b9fbb0731af77190d64196ed33e04523646) on Sepolia |
+| Example attestation | [`0x883b92...`](https://sepolia.etherscan.io/tx/0x883b9d238c975418c4d0c2c833f502dca7f80feae14e037b685d142c1539d982) on Sepolia |
 
-The attestation contract exposes `getAgentReputation(address)`, so any other contract or agent can check this agent's pass rate, number of verified trades, and total nodes checked before deciding to interact.
+46 attestations on-chain. 39% pass rate (the rest were deliberately adversarial tests). Any contract can call `getAgentReputation(address)` to check the record.
 
 ## What the Arbiter checks
 
-The Arbiter runs 18 validation nodes. With LLM reasoning enabled, 14 of them actively fire on each trade. They fall into four groups:
+18 validation nodes, grouped into four categories:
 
 - **Does the trade match the intent?** Token pairs, amounts, slippage bounds, deadlines, fee tiers
 - **Is the transaction well-formed?** Format validation, protocol compatibility, sequencing
-- **Is someone trying to exploit this?** MEV risk, parameter manipulation, intent tampering, consistency
+- **Is someone trying to exploit it?** MEV risk, parameter manipulation, intent tampering, consistency
 - **Is it legal?** Sanctions screening, token legitimacy
 
-A single critical failure stops everything. The trade never reaches Uniswap.
+One critical failure stops everything. The trade never reaches Uniswap.
 
-The LLM reasoning behind each check can run through Venice for private inference. The verification logic stays private, only the pass/fail result and confidence score go on-chain.
+The LLM reasoning behind each check can run through Venice for private inference. The verification logic stays private. Only the pass/fail result goes on-chain.
 
 ## Running it
 
@@ -83,7 +85,7 @@ cp .env.example .env
 
 Add to `.env`:
 ```
-OPENAI_API_KEY=sk-...          # Enables LLM semantic checks in the Arbiter
+OPENAI_API_KEY=sk-...          # LLM semantic checks in the Arbiter
 AGENT_PRIVATE_KEY=0x...        # Sepolia wallet for live swaps + attestations
 ```
 
@@ -99,30 +101,32 @@ python -m agent.trader
 python -m agent.trader --autonomous --interval 60 --max-cycles 10
 ```
 
-Runs the full loop (check portfolio, compute swaps, verify, execute, attest) every 60 seconds, up to 10 cycles. Drop `--max-cycles` to run indefinitely.
+Runs the full loop every 60 seconds: check drift, compute swap, verify, execute, attest. Drop `--max-cycles` to run indefinitely.
 
 ### Dashboard
 
 ```bash
-python -m agent.api          # API server on :8001
+python -m agent.api          # API server
 cd dashboard && npm install && npm run dev   # React UI
 ```
 
+The dashboard reads live balances from Sepolia, shows the verification status of every trade, and lets you trigger rebalances or adversarial tests interactively.
+
 ## Guardrails
 
-The agent can't go off the rails even in autonomous mode:
+Even in autonomous mode:
 
 - Slippage hard cap at 1.5%
 - Every swap must pass Arbiter verification before execution
-- 3 retry attempts max per swap, then it moves on
-- All decisions (pass and fail) get attested on-chain
+- 3 retry attempts max per swap
+- All decisions (pass and reject) get attested on-chain
 
 ## Attestation contract
 
-The contract is simple. Two main functions:
+Two functions:
 
 ```solidity
-// Write: record a verification result
+// Record a verification result
 function recordAttestation(
     bytes32 intentHash,
     uint8 decision,           // 1 = pass, 0 = reject
@@ -133,7 +137,7 @@ function recordAttestation(
     string protocol
 ) external returns (uint256 attestationId)
 
-// Read: check an agent's track record
+// Check an agent's track record
 function getAgentReputation(address agent) external view returns (
     uint256 attestationCount,
     uint256 passCount,
@@ -152,23 +156,23 @@ agent/
   arbiter_client.py      Talks to the Arbiter's /validate endpoint
   uniswap_client.py      Uniswap V3 quotes and swaps via web3.py
   attestation_client.py  Posts results to the attestation contract
-  api.py                 Serves audit data to the dashboard
+  api.py                 Dashboard API with live balances + adversarial tests
 contracts/
   src/ArbiterAttestation.sol
 dashboard/
-  src/App.tsx            React UI with Nava brand theme
+  src/App.tsx            React dashboard with Nava brand theme
 agent.json               ERC-8004 agent manifest
 ```
 
 ## Tracks
 
-**Open Track** (Agents that pay + Agents that trust): The human sets the rules (target allocation, max slippage, deadline). The agent trades within those boundaries. Every trade is independently verified and auditable on-chain.
+**Open Track** (Agents that pay + Agents that trust): The human sets the rules. The agent trades within those boundaries. Every trade is independently verified and auditable on-chain.
 
-**Agents With Receipts, ERC-8004** (Protocol Labs): Verification results are posted as on-chain attestations. The agent builds a queryable trust history over time. Other agents can check the record before interacting.
+**Agents With Receipts, ERC-8004** (Protocol Labs): Verification results are posted as on-chain attestations. The agent builds a queryable trust history. Other agents can check the record before interacting.
 
-**Let the Agent Cook** (Protocol Labs): Autonomous mode. Full decision loop, no human in the loop. ERC-8004 identity, agent manifest, structured logs, safety guardrails.
+**Let the Agent Cook** (Protocol Labs): Autonomous mode. Full decision loop without human intervention. ERC-8004 identity, agent manifest, structured logs, safety guardrails.
 
-**Private Agents, Trusted Actions** (Venice): The Arbiter's LLM semantic checks run through Venice's private inference. The reasoning stays private. Only the binary result goes on-chain.
+**Private Agents, Trusted Actions** (Venice): The Arbiter's LLM checks run through Venice's private inference. The reasoning stays private. Only the binary result goes on-chain.
 
 ## Stack
 
@@ -179,7 +183,7 @@ agent.json               ERC-8004 agent manifest
 | Execution | Uniswap V3 SwapRouter02, web3.py |
 | Attestation | ArbiterAttestation.sol, Foundry |
 | Identity | ERC-8004 on Base |
-| Dashboard | React, Vite |
+| Dashboard | React, Vite, Nava brand theme |
 | Network | Ethereum Sepolia |
 
 ## Try it

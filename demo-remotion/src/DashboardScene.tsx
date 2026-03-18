@@ -4,52 +4,56 @@ import { colors, font, status } from './tokens';
 const StatCard: React.FC<{ label: string; value: string; color: string; delay: number }> = ({ label, value, color, delay }) => {
   const frame = useCurrentFrame();
   const opacity = interpolate(frame, [delay, delay + 15], [0, 1], { extrapolateRight: 'clamp' });
-  const scale = interpolate(frame, [delay, delay + 15], [0.95, 1], { extrapolateRight: 'clamp' });
   return (
     <div style={{
       opacity,
-      transform: `scale(${scale})`,
       flex: 1,
-      padding: '20px 16px',
+      padding: '16px 14px',
       background: 'linear-gradient(180deg, rgba(169,169,169,0.12) 0%, rgba(41,41,41,0.12) 100%)',
       borderRadius: 12,
       textAlign: 'center' as const,
       border: '1px solid rgba(255,255,255,0.04)',
     }}>
-      <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 8 }}>
+      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 6 }}>
         {label}
       </div>
-      <div style={{ color, fontSize: 28, fontWeight: 700 }}>
+      <div style={{ color, fontSize: 24, fontWeight: 700 }}>
         {value}
       </div>
     </div>
   );
 };
 
-const NodeRow: React.FC<{ name: string; st: string; delay: number }> = ({ name, st, delay }) => {
+const TradeRow: React.FC<{ decision: string; label: string; detail: string; delay: number }> = ({ decision, label, detail, delay }) => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [delay, delay + 8], [0, 1], { extrapolateRight: 'clamp' });
-  const col = st === 'PASS' ? status.approved : st === 'FAIL' ? status.rejected : status.info;
+  const opacity = interpolate(frame, [delay, delay + 12], [0, 1], { extrapolateRight: 'clamp' });
+  const col = decision === 'PASS' ? status.approved : status.rejected;
   return (
     <div style={{
       opacity,
+      padding: '10px 14px',
+      background: 'linear-gradient(180deg, rgba(169,169,169,0.08) 0%, rgba(41,41,41,0.08) 100%)',
+      borderRadius: 10,
+      border: `1px solid ${col}15`,
       display: 'flex',
-      justifyContent: 'space-between',
-      padding: '6px 12px',
-      borderBottom: '1px solid rgba(255,255,255,0.04)',
-      fontSize: 11,
-      fontFamily: font.mono,
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 6,
     }}>
-      <span style={{ color: 'rgba(255,255,255,0.6)' }}>{name}</span>
-      <span style={{
-        color: col,
-        fontSize: 10,
-        fontWeight: 700,
-        padding: '2px 8px',
-        border: `1px solid ${col}40`,
-        borderRadius: 999,
-        letterSpacing: '0.05em',
-      }}>{st}</span>
+      <div style={{
+        width: 8, height: 8, borderRadius: '50%', background: col, flexShrink: 0,
+      }} />
+      <div style={{
+        color: col, fontSize: 10, fontWeight: 700, fontFamily: font.mono,
+        letterSpacing: '0.05em', padding: '2px 8px',
+        border: `1px solid ${col}30`, borderRadius: 999, flexShrink: 0,
+      }}>
+        {decision}
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ color: colors.white, fontSize: 12, fontWeight: 700 }}>{label}</div>
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: font.mono }}>{detail}</div>
+      </div>
     </div>
   );
 };
@@ -64,151 +68,116 @@ export const DashboardScene: React.FC = () => {
       fontFamily: font.primary,
       padding: 50,
     }}>
-      <div style={{ opacity: headerOpacity, marginBottom: 24 }}>
-        <div style={{ color: colors.red, fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', fontFamily: font.mono, textTransform: 'uppercase' as const }}>
-          NAVA
+      <div style={{ opacity: headerOpacity, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <div style={{ color: colors.red, fontSize: 11, fontWeight: 700, letterSpacing: '0.15em', fontFamily: font.mono, textTransform: 'uppercase' as const }}>
+            NAVA
+          </div>
+          <div style={{ color: colors.white, fontSize: 22, fontWeight: 700 }}>
+            Arbiter Guard
+          </div>
         </div>
-        <div style={{ color: colors.white, fontSize: 28, fontWeight: 700, marginTop: 4 }}>
-          Arbiter Guard Dashboard
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-        <StatCard label="Portfolio" value="$1,522" color={colors.white} delay={15} />
-        <StatCard label="Verified" value="1" color={status.approved} delay={25} />
-        <StatCard label="Executed" value="1" color={status.approved} delay={35} />
-        <StatCard label="Attested" value="1" color={status.approved} delay={45} />
-        <StatCard label="Mode" value="LIVE" color={status.approved} delay={55} />
-      </div>
-
-      <div style={{ display: 'flex', gap: 20 }}>
         <div style={{
-          opacity: interpolate(frame, [30, 50], [0, 1], { extrapolateRight: 'clamp' }),
-          width: 280,
-          padding: 20,
-          background: 'linear-gradient(180deg, rgba(169,169,169,0.12) 0%, rgba(41,41,41,0.12) 100%)',
+          padding: '8px 14px',
+          background: 'linear-gradient(180deg, rgba(169,169,169,0.08) 0%, rgba(41,41,41,0.08) 100%)',
+          borderRadius: 10,
+          border: '1px solid rgba(255,255,255,0.04)',
+          fontSize: 12, color: 'rgba(255,255,255,0.5)',
+        }}>
+          <span style={{ fontFamily: font.mono, fontSize: 10, color: 'rgba(255,255,255,0.3)', marginRight: 8 }}>STRATEGY</span>
+          Maintain 60% WETH / 40% USDC. Rebalance when drift exceeds 5%.
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
+        <StatCard label="Verified" value="2" color={status.approved} delay={10} />
+        <StatCard label="Rejected" value="4" color={status.rejected} delay={18} />
+        <StatCard label="Executed" value="1" color={status.approved} delay={26} />
+        <StatCard label="Attested" value="6" color={status.approved} delay={34} />
+        <StatCard label="Mode" value="LIVE" color={status.approved} delay={42} />
+      </div>
+
+      <div style={{ display: 'flex', gap: 16 }}>
+        {/* Portfolio */}
+        <div style={{
+          opacity: interpolate(frame, [20, 40], [0, 1], { extrapolateRight: 'clamp' }),
+          width: 260,
+          padding: 16,
+          background: 'linear-gradient(180deg, rgba(169,169,169,0.1) 0%, rgba(41,41,41,0.1) 100%)',
           borderRadius: 12,
           border: '1px solid rgba(255,255,255,0.04)',
         }}>
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 16 }}>
+          <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 10 }}>
             PORTFOLIO
           </div>
-          <div style={{ color: colors.white, fontSize: 24, fontWeight: 700, marginBottom: 20 }}>$1,522</div>
-
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ color: colors.white, fontSize: 13, fontWeight: 700 }}>WETH</span>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>67.3%</span>
-            </div>
-            <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3 }}>
-              <div style={{
-                height: '100%',
-                width: `${interpolate(frame, [50, 70], [0, 67.3], { extrapolateRight: 'clamp' })}%`,
-                background: status.pending,
-                borderRadius: 3,
-              }} />
-            </div>
+          <div style={{ color: colors.white, fontSize: 28, fontWeight: 700, marginBottom: 4 }}>$1,766</div>
+          <div style={{ color: status.pending, fontSize: 10, fontFamily: font.mono, marginBottom: 14 }}>
+            USDC overweight -- rebalance needed
           </div>
-
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ color: colors.white, fontSize: 13, fontWeight: 700 }}>USDC</span>
-              <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>32.7%</span>
+          {[
+            { token: 'WETH', pct: 48.6, target: 60 },
+            { token: 'USDC', pct: 51.4, target: 40 },
+          ].map((t, i) => (
+            <div key={t.token} style={{ marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+                <span style={{ color: colors.white, fontSize: 12, fontWeight: 700 }}>{t.token}</span>
+                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, fontFamily: font.mono }}>{t.pct}%</span>
+              </div>
+              <div style={{ position: 'relative', height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 3 }}>
+                <div style={{
+                  height: '100%',
+                  width: `${interpolate(frame, [40 + i * 10, 60 + i * 10], [0, t.pct], { extrapolateRight: 'clamp' })}%`,
+                  background: Math.abs(t.pct - t.target) > 5 ? status.pending : status.approved,
+                  borderRadius: 3,
+                }} />
+                <div style={{
+                  position: 'absolute', left: `${t.target}%`, top: -2, height: 9, width: 2,
+                  background: 'rgba(255,255,255,0.5)', borderRadius: 1,
+                }} />
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: 9, fontFamily: font.mono, textAlign: 'right' as const, marginTop: 2 }}>
+                target {t.target}%
+              </div>
             </div>
-            <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3 }}>
-              <div style={{
-                height: '100%',
-                width: `${interpolate(frame, [50, 70], [0, 32.7], { extrapolateRight: 'clamp' })}%`,
-                background: colors.red,
-                borderRadius: 3,
-              }} />
-            </div>
-          </div>
+          ))}
 
-          {/* On-chain reputation */}
           <div style={{
             opacity: interpolate(frame, [80, 95], [0, 1], { extrapolateRight: 'clamp' }),
-            marginTop: 20,
-            padding: '10px 12px',
+            marginTop: 10, padding: '8px 10px',
             background: 'rgba(52,211,153,0.06)',
-            border: `1px solid rgba(52,211,153,0.15)`,
+            border: '1px solid rgba(52,211,153,0.12)',
             borderRadius: 8,
           }}>
-            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 6 }}>
-              ON-CHAIN REPUTATION
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 4 }}>
+              ON-CHAIN
             </div>
-            <div style={{ color: status.approved, fontSize: 13, fontWeight: 700 }}>
-              12 attestations
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>
-              queryable by any contract
-            </div>
+            <div style={{ color: status.approved, fontSize: 12, fontWeight: 700 }}>46 attestations</div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10, fontFamily: font.mono }}>39% pass rate</div>
           </div>
         </div>
 
-        <div style={{
-          opacity: interpolate(frame, [45, 65], [0, 1], { extrapolateRight: 'clamp' }),
-          flex: 1,
-          padding: 20,
-          background: 'linear-gradient(180deg, rgba(169,169,169,0.12) 0%, rgba(41,41,41,0.12) 100%)',
-          borderRadius: 12,
-          border: '1px solid rgba(255,255,255,0.04)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-            <span style={{
-              color: status.approved,
-              fontSize: 10,
-              fontWeight: 700,
-              padding: '3px 10px',
-              border: `1px solid ${status.approved}40`,
-              borderRadius: 999,
-              letterSpacing: '0.05em',
-              fontFamily: font.mono,
-            }}>PASS</span>
-            <span style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>
-              0.0447 WETH -&gt; 246.13 USDC
-            </span>
-            <span style={{
-              marginLeft: 'auto',
-              color: status.approved,
-              fontSize: 10,
-              padding: '3px 10px',
-              border: `1px solid ${status.approved}40`,
-              borderRadius: 999,
-              fontFamily: font.mono,
-            }}>EXECUTED + ATTESTED</span>
-          </div>
-
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 8 }}>
-            VERIFICATION NODES (14 PASS)
-          </div>
-          <NodeRow name="sanctions_screening" st="PASS" delay={70} />
-          <NodeRow name="mev_risky_parameters" st="PASS" delay={78} />
-          <NodeRow name="format_validation" st="PASS" delay={86} />
-          <NodeRow name="protocol_compatibility" st="PASS" delay={94} />
-          <NodeRow name="slippage_tolerance" st="PASS" delay={102} />
-          <NodeRow name="intent_manipulation" st="PASS" delay={110} />
-          <NodeRow name="consistency_analysis" st="PASS" delay={118} />
-          <NodeRow name="element_matching" st="PASS" delay={126} />
+        {/* Trades */}
+        <div style={{ flex: 1 }}>
+          <TradeRow decision="PASS" label="25 USDC -> WETH" detail="Executed on Sepolia | TX: 0xaf9cb6...523646" delay={50} />
+          <TradeRow decision="REJECT" label="Sanctioned recipient" detail="sanctions_screening: OFAC deny list" delay={70} />
+          <TradeRow decision="REJECT" label="Intent mismatch" detail="amount_matching: intent does not match tx" delay={90} />
+          <TradeRow decision="REJECT" label="Unknown router" detail="protocol_compatibility: not a Uniswap contract" delay={110} />
 
           <div style={{
-            opacity: interpolate(frame, [140, 155], [0, 1], { extrapolateRight: 'clamp' }),
-            marginTop: 12,
-            padding: '8px 12px',
-            background: 'rgba(52,211,153,0.06)',
-            border: `1px solid rgba(52,211,153,0.15)`,
-            borderRadius: 8,
-            fontSize: 11,
-            fontFamily: font.mono,
+            opacity: interpolate(frame, [140, 160], [0, 1], { extrapolateRight: 'clamp' }),
+            marginTop: 12, padding: '10px 14px',
+            background: 'rgba(52,211,153,0.05)',
+            border: '1px solid rgba(52,211,153,0.12)',
+            borderRadius: 10, fontSize: 11, fontFamily: font.mono,
           }}>
             <div style={{ marginBottom: 4 }}>
-              <span style={{ color: 'rgba(255,255,255,0.4)' }}>Swap TX: </span>
-              <span style={{ color: status.approved }}>0x5fe65c...cd9036</span>
-              <span style={{ color: 'rgba(255,255,255,0.3)', marginLeft: 12 }}>Block 10469642</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>Swap: </span>
+              <span style={{ color: status.approved }}>0xaf9cb6...523646</span>
+              <span style={{ color: 'rgba(255,255,255,0.2)', marginLeft: 8 }}>Block 10470537</span>
             </div>
             <div>
-              <span style={{ color: 'rgba(255,255,255,0.4)' }}>Attestation: </span>
-              <span style={{ color: status.approved }}>0x065965...e25d6</span>
+              <span style={{ color: 'rgba(255,255,255,0.3)' }}>Attestation: </span>
+              <span style={{ color: status.approved }}>0x883b92...39d982</span>
             </div>
           </div>
         </div>

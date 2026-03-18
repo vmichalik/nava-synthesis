@@ -51,34 +51,32 @@ export const TerminalScene: React.FC = () => {
           <div style={{ width: 12, height: 12, borderRadius: 6, background: '#FEBC2E' }} />
           <div style={{ width: 12, height: 12, borderRadius: 6, background: '#28C840' }} />
           <div style={{ flex: 1, textAlign: 'center' as const, color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>
-            python -m agent.trader
+            python -m agent.trader --autonomous
           </div>
         </div>
 
         <div style={{ padding: '16px 20px', maxHeight: 420, overflow: 'hidden' }}>
-          <Line text="$ python -m agent.trader" color={status.info} delay={15} />
-          <Line text="Arbiter: ok (LLM: enabled) | Uniswap: live (Sepolia)" color="rgba(255,255,255,0.5)" delay={25} />
-          <Line text="" delay={35} />
-          <Line text="Portfolio: $1,522" color={colors.white} delay={40} />
-          <Line text="  WETH  0.41  (67.3%)   USDC  497  (32.7%)" color={status.pending} delay={50} />
-          <Line text="" delay={60} />
-          <Line text="Rebalancing: Swap 0.0447 WETH -> USDC" color={status.approved} delay={65} />
-          <Line text="" delay={78} />
-          <Line text="Verifying with Arbiter..." color={status.info} delay={85} />
-          <Line text="  Decision: PASS" color={status.approved} delay={100} />
-          <Line text="  14 passed | 0 failed | 4 skipped" color={colors.white} delay={110} />
-          <Line text="  [PASS] VERIFIED" color={status.approved} delay={120} />
-          <Line text="" delay={135} />
-          <Line text="Executing on Uniswap..." color={status.info} delay={140} />
-          <Line text="  0.0447 WETH -> 246.13 USDC" color={colors.white} delay={150} />
-          <Line text="  [OK] Swap executed" color={status.approved} delay={165} />
-          <Line text="  TX: 0x5fe65c...cd9036  Block: 10469642" color={status.approved} delay={175} />
-          <Line text="" delay={190} />
-          <Line text="Recording attestation..." color={status.info} delay={195} />
-          <Line text="  [OK] Attested on-chain" color={status.approved} delay={210} />
-          <Line text="  TX: 0x065965...e25d6" color={status.approved} delay={220} />
-          <Line text="" delay={235} />
-          <Line text="Verified: 1 | Executed: 1 | Attested: 1" color={status.approved} delay={240} />
+          <Line text="Arbiter: ok | Uniswap: live (Sepolia)" color="rgba(255,255,255,0.4)" delay={15} />
+          <Line text="Strategy: 60/40 WETH/USDC | 46 attestations" color="rgba(255,255,255,0.4)" delay={22} />
+          <Line text="" delay={30} />
+          <Line text="Rebalance: USDC overweight, buying WETH" color={colors.white} delay={35} />
+          <Line text="  Verifying... PASS (13 checked, 0 failed)" color={status.approved} delay={48} />
+          <Line text="  Executing... 25 USDC -> WETH" color={status.approved} delay={62} />
+          <Line text="  TX: 0xaf9cb6...523646  Block: 10470537" color={status.approved} delay={75} />
+          <Line text="  Attested: 0x883b92...39d982" color={status.approved} delay={88} />
+          <Line text="" delay={100} />
+          <Line text="Sanctioned address test" color={status.pending} delay={105} />
+          <Line text="  REJECT: address on OFAC sanctions list" color={status.rejected} delay={118} />
+          <Line text="  Blocked. Rejection attested on-chain." color="rgba(255,255,255,0.5)" delay={130} />
+          <Line text="" delay={142} />
+          <Line text="Intent mismatch test" color={status.pending} delay={147} />
+          <Line text="  REJECT: intent does not match transaction" color={status.rejected} delay={160} />
+          <Line text="" delay={172} />
+          <Line text="Unknown router test" color={status.pending} delay={177} />
+          <Line text="  REJECT: not a registered Uniswap contract" color={status.rejected} delay={190} />
+          <Line text="" delay={205} />
+          <Line text="Passed: 2 | Rejected: 4 | Executed: 1" color={status.approved} delay={215} />
+          <Line text="Every decision attested on Sepolia." color="rgba(255,255,255,0.4)" delay={228} />
         </div>
       </div>
     </AbsoluteFill>
