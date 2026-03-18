@@ -1,14 +1,14 @@
 import { AbsoluteFill, useCurrentFrame, interpolate } from 'remotion';
-import { colors, font } from './tokens';
+import { colors, font, status } from './tokens';
 
 export const ClosingScene: React.FC = () => {
   const frame = useCurrentFrame();
 
   const tagline = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: 'clamp' });
   const line = interpolate(frame, [15, 45], [0, 160], { extrapolateRight: 'clamp' });
-  const details = interpolate(frame, [40, 70], [0, 1], { extrapolateRight: 'clamp' });
-  const cta = interpolate(frame, [80, 110], [0, 1], { extrapolateRight: 'clamp' });
-  const preview = interpolate(frame, [110, 140], [0, 1], { extrapolateRight: 'clamp' });
+  const tracks = interpolate(frame, [40, 70], [0, 1], { extrapolateRight: 'clamp' });
+  const cta = interpolate(frame, [90, 120], [0, 1], { extrapolateRight: 'clamp' });
+  const preview = interpolate(frame, [120, 150], [0, 1], { extrapolateRight: 'clamp' });
 
   return (
     <AbsoluteFill style={{
@@ -32,10 +32,10 @@ export const ClosingScene: React.FC = () => {
       <div style={{ opacity: tagline, textAlign: 'center' as const }}>
         <div style={{
           color: colors.white,
-          fontSize: 42,
+          fontSize: 38,
           fontWeight: 700,
           letterSpacing: '-0.01em',
-          lineHeight: 1.2,
+          lineHeight: 1.3,
         }}>
           Every trade verified.
           <br />
@@ -47,30 +47,35 @@ export const ClosingScene: React.FC = () => {
         width: line,
         height: 2,
         background: colors.red,
-        marginTop: 30,
-        marginBottom: 30,
+        marginTop: 24,
+        marginBottom: 24,
       }} />
 
-      <div style={{ opacity: details, textAlign: 'center' as const }}>
-        <div style={{
-          color: colors.taupe,
-          fontSize: 18,
-          marginBottom: 8,
-        }}>
-          Arbiter Guard
-        </div>
-        <div style={{
-          color: 'rgba(255,255,255,0.4)',
-          fontSize: 14,
-          fontFamily: font.mono,
-        }}>
-          github.com/vmichalik/nava-synthesis
-        </div>
+      {/* What we built */}
+      <div style={{ opacity: tracks, display: 'flex', gap: 16, marginBottom: 30 }}>
+        {[
+          { label: 'ERC-8004', color: status.approved },
+          { label: 'AUTONOMOUS', color: status.approved },
+          { label: 'ATTESTED', color: status.approved },
+          { label: 'PRIVATE', color: status.info },
+        ].map((tag, i) => (
+          <div key={i} style={{
+            padding: '6px 14px',
+            border: `1px solid ${tag.color}40`,
+            borderRadius: 999,
+            color: tag.color,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            fontFamily: font.mono,
+          }}>
+            {tag.label}
+          </div>
+        ))}
       </div>
 
       <div style={{
         opacity: cta,
-        marginTop: 30,
         display: 'flex',
         gap: 24,
         alignItems: 'center',
@@ -90,16 +95,15 @@ export const ClosingScene: React.FC = () => {
           fontSize: 13,
           fontFamily: font.mono,
         }}>
-          x.com/navaai
+          github.com/vmichalik/nava-synthesis
         </div>
       </div>
 
       <div style={{
         opacity: preview,
         marginTop: 24,
-        color: 'rgba(255,255,255,0.3)',
+        color: 'rgba(255,255,255,0.35)',
         fontSize: 13,
-        fontFamily: font.mono,
       }}>
         Preview access for agent builders coming soon
       </div>

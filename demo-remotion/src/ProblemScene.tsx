@@ -46,22 +46,22 @@ export const ProblemScene: React.FC = () => {
           letterSpacing: '-0.01em',
           marginBottom: 40,
         }}>
-          AI agents move money without guardrails
+          Agents trade. Nothing checks their work.
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ ...textStyle, opacity: line1 }}>
           <span style={{ color: status.rejected, fontFamily: font.mono, fontSize: 14, marginRight: 12 }}>01</span>
-          No independent verification before on-chain execution
+          No safety check between an agent's decision and a swap hitting the chain
         </div>
         <div style={{ ...textStyle, opacity: line2 }}>
           <span style={{ color: status.pending, fontFamily: font.mono, fontSize: 14, marginRight: 12 }}>02</span>
-          No audit trail of agent decisions
+          No way to prove an agent traded responsibly after the fact
         </div>
         <div style={{ ...textStyle, opacity: line3 }}>
           <span style={{ color: status.info, fontFamily: font.mono, fontSize: 14, marginRight: 12 }}>03</span>
-          Humans can't scope what agents are allowed to do
+          No on-chain record other agents can check before trusting this one
         </div>
       </div>
 
@@ -74,7 +74,7 @@ export const ProblemScene: React.FC = () => {
         background: 'rgba(254,6,0,0.05)',
       }}>
         <span style={{ color: colors.white, fontSize: 20, fontWeight: 700 }}>
-          The Arbiter verifies every trade before it touches the chain.
+          Arbiter Guard fixes all three.
         </span>
       </div>
     </AbsoluteFill>

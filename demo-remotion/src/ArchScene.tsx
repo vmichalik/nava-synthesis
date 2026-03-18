@@ -1,114 +1,177 @@
 import { AbsoluteFill, useCurrentFrame, interpolate } from 'remotion';
 import { colors, font, status } from './tokens';
 
-const Box: React.FC<{
-  label: string;
-  sublabel: string;
-  color: string;
-  opacity: number;
-  x: number;
-  y: number;
-  width?: number;
-}> = ({ label, sublabel, color, opacity, x, y, width = 200 }) => (
-  <div style={{
-    position: 'absolute',
-    left: x,
-    top: y,
-    opacity,
-    transform: `translateY(${interpolate(opacity, [0, 1], [10, 0])}px)`,
-    width,
-    padding: '20px 16px',
-    background: 'linear-gradient(180deg, rgba(169,169,169,0.15) 0%, rgba(41,41,41,0.15) 100%)',
-    border: `1px solid ${color}33`,
-    borderRadius: 12,
-    textAlign: 'center' as const,
-  }}>
-    <div style={{ color, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 8 }}>
-      {label}
-    </div>
-    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
-      {sublabel}
-    </div>
-  </div>
-);
-
-const Arrow: React.FC<{ x1: number; y1: number; x2: number; y2: number; opacity: number; color?: string }> = ({ x1, y1, x2, y2, opacity, color = 'rgba(255,255,255,0.2)' }) => (
-  <svg style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', opacity, pointerEvents: 'none' }}>
-    <defs>
-      <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <polygon points="0 0, 8 3, 0 6" fill={color} />
-      </marker>
-    </defs>
-    <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={color} strokeWidth="2" markerEnd="url(#arrowhead)" />
-  </svg>
-);
-
+/**
+ * Architecture scene matching the README diagram:
+ *
+ *   Agent decides to trade
+ *           |
+ *     Arbiter (18 checks)
+ *           |
+ *      PASS / FAIL
+ *       |        |
+ *    Execute   Retry
+ *       |
+ *    Attest on-chain
+ *       |
+ *    Queryable history
+ */
 export const ArchScene: React.FC = () => {
   const frame = useCurrentFrame();
 
   const header = interpolate(frame, [0, 25], [0, 1], { extrapolateRight: 'clamp' });
-  const box1 = interpolate(frame, [25, 50], [0, 1], { extrapolateRight: 'clamp' });
-  const arrow1 = interpolate(frame, [50, 65], [0, 1], { extrapolateRight: 'clamp' });
-  const box2 = interpolate(frame, [60, 85], [0, 1], { extrapolateRight: 'clamp' });
-  const arrow2 = interpolate(frame, [85, 100], [0, 1], { extrapolateRight: 'clamp' });
-  const box3 = interpolate(frame, [95, 120], [0, 1], { extrapolateRight: 'clamp' });
-  const box4 = interpolate(frame, [120, 145], [0, 1], { extrapolateRight: 'clamp' });
-  const arrow3 = interpolate(frame, [130, 145], [0, 1], { extrapolateRight: 'clamp' });
+
+  // Flow steps appear sequentially
+  const step1 = interpolate(frame, [20, 40], [0, 1], { extrapolateRight: 'clamp' });
+  const step2 = interpolate(frame, [45, 65], [0, 1], { extrapolateRight: 'clamp' });
+  const step3 = interpolate(frame, [70, 90], [0, 1], { extrapolateRight: 'clamp' });
+  const stepPass = interpolate(frame, [95, 115], [0, 1], { extrapolateRight: 'clamp' });
+  const stepFail = interpolate(frame, [100, 120], [0, 1], { extrapolateRight: 'clamp' });
+  const step4 = interpolate(frame, [125, 145], [0, 1], { extrapolateRight: 'clamp' });
+  const step5 = interpolate(frame, [150, 170], [0, 1], { extrapolateRight: 'clamp' });
+  const step6 = interpolate(frame, [180, 200], [0, 1], { extrapolateRight: 'clamp' });
+  const checks = interpolate(frame, [210, 260], [0, 1], { extrapolateRight: 'clamp' });
+
+  const boxStyle = (opacity: number, borderColor: string) => ({
+    opacity,
+    transform: `translateY(${interpolate(opacity, [0, 1], [8, 0])}px)`,
+    padding: '14px 24px',
+    border: `1px solid ${borderColor}`,
+    borderRadius: 10,
+    textAlign: 'center' as const,
+    background: 'rgba(255,255,255,0.03)',
+  });
+
+  const lineStyle = (opacity: number) => ({
+    opacity,
+    width: 2,
+    height: 24,
+    background: 'rgba(255,255,255,0.15)',
+    margin: '0 auto',
+  });
 
   return (
     <AbsoluteFill style={{
       background: colors.black,
       fontFamily: font.primary,
+      display: 'flex',
+      flexDirection: 'row',
+      padding: '50px 60px',
+      gap: 60,
     }}>
-      <div style={{ opacity: header, textAlign: 'center' as const, paddingTop: 60 }}>
-        <div style={{ color: colors.red, fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 12 }}>
-          ARCHITECTURE
+      {/* Left: flow diagram */}
+      <div style={{ flex: '0 0 420px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ opacity: header, marginBottom: 30 }}>
+          <div style={{ color: colors.red, fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 8 }}>
+            HOW IT WORKS
+          </div>
         </div>
-        <div style={{ color: colors.white, fontSize: 32, fontWeight: 700 }}>
-          How Arbiter Guard works
+
+        {/* Agent decides */}
+        <div style={boxStyle(step1, 'rgba(255,255,255,0.15)')}>
+          <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>Agent decides to trade</div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>portfolio drift detected</div>
+        </div>
+        <div style={lineStyle(step2)} />
+
+        {/* Arbiter */}
+        <div style={boxStyle(step2, colors.red + '66')}>
+          <div style={{ color: colors.red, fontSize: 14, fontWeight: 700 }}>Arbiter verification</div>
+          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>18 independent safety checks</div>
+        </div>
+        <div style={lineStyle(step3)} />
+
+        {/* PASS / FAIL branch */}
+        <div style={{ opacity: step3, display: 'flex', gap: 40, alignItems: 'flex-start' }}>
+          <div style={{ textAlign: 'center' as const }}>
+            <div style={{ ...boxStyle(stepPass, status.approved + '66'), minWidth: 140 }}>
+              <div style={{ color: status.approved, fontSize: 14, fontWeight: 700 }}>PASS</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>execute swap</div>
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' as const }}>
+            <div style={{ ...boxStyle(stepFail, status.rejected + '44'), minWidth: 140 }}>
+              <div style={{ color: status.rejected, fontSize: 14, fontWeight: 700 }}>FAIL</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>adjust & retry</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ ...lineStyle(step4), marginLeft: -70 }} />
+
+        {/* Attest */}
+        <div style={{ ...boxStyle(step4, status.approved + '44'), marginLeft: -70 }}>
+          <div style={{ color: status.approved, fontSize: 14, fontWeight: 700 }}>Record attestation on-chain</div>
+        </div>
+        <div style={{ ...lineStyle(step5), marginLeft: -70 }} />
+
+        {/* Queryable */}
+        <div style={{ ...boxStyle(step5, status.info + '44'), marginLeft: -70 }}>
+          <div style={{ color: status.info, fontSize: 13 }}>Anyone can query this agent's history</div>
         </div>
       </div>
 
-      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        <Box label="Trading Agent" sublabel="Python | Strategy + retry logic" color={colors.white} opacity={box1} x={120} y={200} width={220} />
-        <Arrow x1={340} y1={245} x2={440} y2={245} opacity={arrow1} color={colors.red} />
-        <Box label="Arbiter" sublabel="18-node verification graph" color={colors.red} opacity={box2} x={450} y={200} width={220} />
-        <Arrow x1={670} y1={245} x2={770} y2={245} opacity={arrow2} color={status.approved} />
-        <Box label="Uniswap V3" sublabel="SwapRouter on Sepolia" color={status.approved} opacity={box3} x={780} y={200} width={220} />
+      {/* Right: what gets checked */}
+      <div style={{ flex: 1, paddingTop: 30 }}>
+        <div style={{
+          opacity: step6,
+          color: colors.red,
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.1em',
+          fontFamily: font.mono,
+          textTransform: 'uppercase' as const,
+          marginBottom: 20,
+        }}>
+          WHAT THE ARBITER CHECKS
+        </div>
 
-        <Arrow x1={230} y1={290} x2={230} y2={360} opacity={arrow3} color="rgba(255,255,255,0.2)" />
-        <Box label="Dashboard" sublabel="React + Nava brand theme" color={status.info} opacity={box4} x={120} y={370} width={220} />
+        {[
+          { title: 'Does the trade match the intent?', detail: 'token pairs, amounts, slippage, deadlines', color: colors.white },
+          { title: 'Is the transaction well-formed?', detail: 'format validation, protocol compatibility', color: colors.taupe },
+          { title: 'Is someone trying to exploit it?', detail: 'MEV risk, manipulation, tampering', color: status.pending },
+          { title: 'Is it legal?', detail: 'sanctions screening, token legitimacy', color: status.info },
+        ].map((item, i) => (
+          <div key={i} style={{
+            opacity: interpolate(checks, [i * 0.2, i * 0.2 + 0.3], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
+            marginBottom: 18,
+            display: 'flex',
+            gap: 12,
+            alignItems: 'baseline',
+          }}>
+            <div style={{ width: 8, height: 8, borderRadius: 4, background: item.color, flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{item.title}</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontFamily: font.mono }}>{item.detail}</div>
+            </div>
+          </div>
+        ))}
 
         <div style={{
-          position: 'absolute',
-          right: 80,
-          bottom: 80,
-          opacity: box4,
-          maxWidth: 360,
+          opacity: interpolate(frame, [260, 280], [0, 1], { extrapolateRight: 'clamp' }),
+          marginTop: 30,
+          padding: '14px 18px',
+          background: 'rgba(254,6,0,0.05)',
+          border: '1px solid rgba(254,6,0,0.2)',
+          borderRadius: 10,
         }}>
-          <div style={{ color: colors.red, fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 16 }}>
-            ARBITER VERIFICATION NODES
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>
+            One critical failure stops everything.
+            <br />
+            The trade never reaches Uniswap.
           </div>
-          {[
-            { cat: 'Intent Alignment', nodes: 'token, amount, slippage, deadline, fee', color: colors.white },
-            { cat: 'Technical Invariants', nodes: 'format, protocol compatibility', color: colors.taupe },
-            { cat: 'Adversarial Detection', nodes: 'MEV risk, manipulation, consistency', color: status.pending },
-            { cat: 'Legal Compliance', nodes: 'sanctions, token legitimacy', color: status.info },
-          ].map((item, i) => (
-            <div key={i} style={{
-              opacity: interpolate(frame, [140 + i * 15, 160 + i * 15], [0, 1], { extrapolateRight: 'clamp' }),
-              marginBottom: 12,
-              display: 'flex',
-              gap: 8,
-              alignItems: 'baseline',
-            }}>
-              <div style={{ width: 6, height: 6, borderRadius: 3, background: item.color, flexShrink: 0, marginTop: 4 }} />
-              <div>
-                <div style={{ color: colors.white, fontSize: 13, fontWeight: 700 }}>{item.cat}</div>
-                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>{item.nodes}</div>
-              </div>
-            </div>
-          ))}
+        </div>
+
+        <div style={{
+          opacity: interpolate(frame, [270, 290], [0, 1], { extrapolateRight: 'clamp' }),
+          marginTop: 16,
+          color: 'rgba(255,255,255,0.3)',
+          fontSize: 12,
+          fontFamily: font.mono,
+        }}>
+          LLM reasoning runs through Venice for private inference.
+          <br />
+          Only the pass/fail result goes on-chain.
         </div>
       </div>
     </AbsoluteFill>
