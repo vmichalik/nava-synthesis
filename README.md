@@ -54,6 +54,33 @@ In autonomous mode, the agent runs this loop continuously without human interven
 
 46 attestations on-chain. 39% pass rate (the rest were deliberately adversarial tests). Any contract can call `getAgentReputation(address)` to check the record.
 
+## Demo transactions
+
+Six sequential scenarios, each verified by the Arbiter and attested on Sepolia:
+
+**PASS -- Rebalance buy WETH** (USDC overweight, agent sells USDC for WETH)
+- Intent: `Rebalance portfolio: swap USDC for WETH on Uniswap V3, slippage protection enabled`
+- 13 checks passed, 0 failed
+- Swap: [`0xaf9cb6...`](https://sepolia.etherscan.io/tx/0xaf9cb63873a68cb3ae9c5fe58c748b9fbb0731af77190d64196ed33e04523646) (25 USDC -> WETH, block 10470537)
+- Attestation: [`0x883b92...`](https://sepolia.etherscan.io/tx/0x883b9d238c975418c4d0c2c833f502dca7f80feae14e037b685d142c1539d982)
+
+**REJECT -- Sanctioned recipient** (Tornado Cash deposit address)
+- Intent: `Swap 0.5 WETH for USDC, send to 0x8576a...91353c`
+- Failed: `sanctions_screening` -- address on OFAC deny list
+- Attestation: [`0x5db92c...`](https://sepolia.etherscan.io/tx/0x5db92cb50a14ef6a6bf5a1e6ac28073c6d5cc1a7be0217fb30ccc8456911266e)
+
+**REJECT -- Intent mismatch** (intent says DAI, transaction swaps WETH)
+- Intent: `Buy 100 DAI with USDC on Uniswap V3, slippage protection enabled`
+- Failed: `amount_matching` -- intent does not match transaction
+- Attestation: [`0x9e7820...`](https://sepolia.etherscan.io/tx/0x9e7820cc171d0a3331a70584074ff2d836ae92bef7eac3db7389ea6635359f9a)
+
+**REJECT -- Unknown router** (transaction targets a fake contract)
+- Intent: `Rebalance portfolio: swap WETH for USDC on Uniswap V3`
+- Failed: `protocol_compatibility` -- `0xdead...` is not a registered Uniswap contract
+- Attestation: [`0x821e99...`](https://sepolia.etherscan.io/tx/0x821e996dc59d4a0ec54df2c4110c452f58c3e68394fd222b52607128fcd01b07)
+
+Every rejection is permanently recorded on-chain alongside the passes.
+
 ## What the Arbiter checks
 
 18 validation nodes, grouped into four categories:
