@@ -11,22 +11,21 @@ const MUSIC_FILE = staticFile('Aylex - Life is Beautiful (freetouse.com).mp3');
 /**
  * Arbiter Guard Demo Video
  *
- * Timeline (30fps, 1500 frames = 50 seconds):
- *   0-179:     Title (6s)
- *   180-449:   Problem statement (9s)
- *   450-749:   Architecture (10s)
- *   750-1049:  Terminal demo (10s)
- *   1050-1319: Dashboard UI (9s)
- *   1320-1499: Closing (6s)
+ * Timeline (30fps, 1800 frames = 60 seconds):
+ *   0-179:      Title (6s)
+ *   180-479:    Problem statement (10s)
+ *   480-869:    Architecture: built vs powered by (13s)
+ *   870-1169:   Terminal demo (10s)
+ *   1170-1499:  Dashboard UI (11s)
+ *   1500-1799:  Closing (10s)
  */
 export const ArbiterGuardVideo: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // Fade music in over first 2s, fade out over last 3s
   const musicVolume = interpolate(
     frame,
-    [0, 60, 1380, 1500],
-    [0, 0.35, 0.35, 0],
+    [0, 60, 1680, 1800],
+    [0, 0.3, 0.3, 0],
     { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
   );
 
@@ -36,19 +35,19 @@ export const ArbiterGuardVideo: React.FC = () => {
       <Sequence from={0} durationInFrames={180}>
         <TitleScene />
       </Sequence>
-      <Sequence from={180} durationInFrames={270}>
+      <Sequence from={180} durationInFrames={300}>
         <ProblemScene />
       </Sequence>
-      <Sequence from={450} durationInFrames={300}>
+      <Sequence from={480} durationInFrames={390}>
         <ArchScene />
       </Sequence>
-      <Sequence from={750} durationInFrames={300}>
+      <Sequence from={870} durationInFrames={300}>
         <TerminalScene />
       </Sequence>
-      <Sequence from={1050} durationInFrames={270}>
+      <Sequence from={1170} durationInFrames={330}>
         <DashboardScene />
       </Sequence>
-      <Sequence from={1320} durationInFrames={180}>
+      <Sequence from={1500} durationInFrames={300}>
         <ClosingScene />
       </Sequence>
     </AbsoluteFill>

@@ -5,10 +5,10 @@ export const ProblemScene: React.FC = () => {
   const frame = useCurrentFrame();
 
   const headerOpacity = interpolate(frame, [0, 25], [0, 1], { extrapolateRight: 'clamp' });
-  const line1 = interpolate(frame, [30, 55], [0, 1], { extrapolateRight: 'clamp' });
-  const line2 = interpolate(frame, [65, 90], [0, 1], { extrapolateRight: 'clamp' });
-  const line3 = interpolate(frame, [100, 125], [0, 1], { extrapolateRight: 'clamp' });
-  const answer = interpolate(frame, [160, 195], [0, 1], { extrapolateRight: 'clamp' });
+  const line1 = interpolate(frame, [40, 65], [0, 1], { extrapolateRight: 'clamp' });
+  const line2 = interpolate(frame, [80, 105], [0, 1], { extrapolateRight: 'clamp' });
+  const line3 = interpolate(frame, [120, 145], [0, 1], { extrapolateRight: 'clamp' });
+  const answer = interpolate(frame, [180, 215], [0, 1], { extrapolateRight: 'clamp' });
 
   const textStyle = {
     fontSize: 20,
@@ -74,7 +74,7 @@ export const ProblemScene: React.FC = () => {
         background: 'rgba(254,6,0,0.05)',
       }}>
         <span style={{ color: colors.white, fontSize: 20, fontWeight: 700 }}>
-          Arbiter Guard fixes all three.
+          We built Arbiter Guard to fix this.
         </span>
       </div>
     </AbsoluteFill>

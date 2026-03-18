@@ -65,6 +65,39 @@ In autonomous mode, the agent runs this loop continuously without human interven
 
 ---
 
+## What we built vs. what powers it
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**Built for The Synthesis**
+
+- Trading agent (Python, autonomous rebalancing)
+- Uniswap V3 execution (real swaps on Sepolia)
+- ArbiterAttestation smart contract (on-chain receipts)
+- React dashboard (live balances, adversarial tests)
+- ERC-8004 identity + agent manifest
+- Venice private inference integration
+
+</td>
+<td width="50%" valign="top">
+
+**Powered by the Nava Arbiter**
+
+- 18-node validation graph
+- LLM semantic reasoning (intent, adversarial, compliance)
+- Protocol manifests (Uniswap, Compound, CoW)
+- Sanctions and token legitimacy lists
+
+The Nava Arbiter is a developer product coming soon. We didn't build it at the hackathon. We used it as infrastructure.
+
+</td>
+</tr>
+</table>
+
+---
+
 ## On-chain artifacts
 
 | | |
@@ -266,9 +299,9 @@ The Arbiter's LLM checks run through Venice's private inference. The reasoning s
 ---
 
 <p align="center">
-  Preview access to the Nava Arbiter is coming soon for agent builders.<br>
-  If you're building autonomous agents that move value on-chain<br>
-  and want independent verification before execution, reach out.
+  The Nava Arbiter is a developer product by <a href="https://x.com/navaai">Nava AI</a>.<br>
+  Preview access for agent builders is coming soon.<br>
+  If you're building autonomous agents that move value on-chain, reach out.
 </p>
 
 <p align="center">

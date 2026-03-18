@@ -1,178 +1,214 @@
 import { AbsoluteFill, useCurrentFrame, interpolate } from 'remotion';
 import { colors, font, status } from './tokens';
 
-/**
- * Architecture scene matching the README diagram:
- *
- *   Agent decides to trade
- *           |
- *     Arbiter (18 checks)
- *           |
- *      PASS / FAIL
- *       |        |
- *    Execute   Retry
- *       |
- *    Attest on-chain
- *       |
- *    Queryable history
- */
 export const ArchScene: React.FC = () => {
   const frame = useCurrentFrame();
 
   const header = interpolate(frame, [0, 25], [0, 1], { extrapolateRight: 'clamp' });
 
-  // Flow steps appear sequentially
-  const step1 = interpolate(frame, [20, 40], [0, 1], { extrapolateRight: 'clamp' });
-  const step2 = interpolate(frame, [45, 65], [0, 1], { extrapolateRight: 'clamp' });
-  const step3 = interpolate(frame, [70, 90], [0, 1], { extrapolateRight: 'clamp' });
-  const stepPass = interpolate(frame, [95, 115], [0, 1], { extrapolateRight: 'clamp' });
-  const stepFail = interpolate(frame, [100, 120], [0, 1], { extrapolateRight: 'clamp' });
-  const step4 = interpolate(frame, [125, 145], [0, 1], { extrapolateRight: 'clamp' });
-  const step5 = interpolate(frame, [150, 170], [0, 1], { extrapolateRight: 'clamp' });
-  const step6 = interpolate(frame, [180, 200], [0, 1], { extrapolateRight: 'clamp' });
-  const checks = interpolate(frame, [210, 260], [0, 1], { extrapolateRight: 'clamp' });
+  // "Built at hackathon" column
+  const builtLabel = interpolate(frame, [20, 40], [0, 1], { extrapolateRight: 'clamp' });
+  const item1 = interpolate(frame, [40, 60], [0, 1], { extrapolateRight: 'clamp' });
+  const item2 = interpolate(frame, [55, 75], [0, 1], { extrapolateRight: 'clamp' });
+  const item3 = interpolate(frame, [70, 90], [0, 1], { extrapolateRight: 'clamp' });
+  const item4 = interpolate(frame, [85, 105], [0, 1], { extrapolateRight: 'clamp' });
+  const item5 = interpolate(frame, [100, 120], [0, 1], { extrapolateRight: 'clamp' });
 
-  const boxStyle = (opacity: number, borderColor: string) => ({
+  // "Powered by" column
+  const poweredLabel = interpolate(frame, [130, 150], [0, 1], { extrapolateRight: 'clamp' });
+  const arbiter1 = interpolate(frame, [150, 170], [0, 1], { extrapolateRight: 'clamp' });
+  const arbiter2 = interpolate(frame, [165, 185], [0, 1], { extrapolateRight: 'clamp' });
+  const arbiter3 = interpolate(frame, [180, 200], [0, 1], { extrapolateRight: 'clamp' });
+
+  // Flow
+  const flow = interpolate(frame, [210, 240], [0, 1], { extrapolateRight: 'clamp' });
+  const flowNote = interpolate(frame, [250, 275], [0, 1], { extrapolateRight: 'clamp' });
+
+  const itemStyle = (opacity: number, color: string) => ({
     opacity,
-    transform: `translateY(${interpolate(opacity, [0, 1], [8, 0])}px)`,
-    padding: '14px 24px',
-    border: `1px solid ${borderColor}`,
-    borderRadius: 10,
-    textAlign: 'center' as const,
-    background: 'rgba(255,255,255,0.03)',
+    transform: `translateY(${interpolate(opacity, [0, 1], [6, 0])}px)`,
+    display: 'flex' as const,
+    gap: 10,
+    alignItems: 'center' as const,
+    marginBottom: 10,
   });
 
-  const lineStyle = (opacity: number) => ({
-    opacity,
-    width: 2,
-    height: 24,
-    background: 'rgba(255,255,255,0.15)',
-    margin: '0 auto',
+  const dotStyle = (color: string) => ({
+    width: 6, height: 6, borderRadius: 3, background: color, flexShrink: 0 as const,
   });
 
   return (
     <AbsoluteFill style={{
       background: colors.black,
       fontFamily: font.primary,
-      display: 'flex',
-      flexDirection: 'row',
       padding: '50px 60px',
-      gap: 60,
     }}>
-      {/* Left: flow diagram */}
-      <div style={{ flex: '0 0 420px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ opacity: header, marginBottom: 30 }}>
-          <div style={{ color: colors.red, fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 8 }}>
-            HOW IT WORKS
-          </div>
+      <div style={{ opacity: header, marginBottom: 30 }}>
+        <div style={{ color: colors.red, fontSize: 12, fontWeight: 700, letterSpacing: '0.15em', fontFamily: font.mono, textTransform: 'uppercase' as const, marginBottom: 8 }}>
+          WHAT WE BUILT
         </div>
-
-        {/* Agent decides */}
-        <div style={boxStyle(step1, 'rgba(255,255,255,0.15)')}>
-          <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>Agent decides to trade</div>
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>portfolio drift detected</div>
-        </div>
-        <div style={lineStyle(step2)} />
-
-        {/* Arbiter */}
-        <div style={boxStyle(step2, colors.red + '66')}>
-          <div style={{ color: colors.red, fontSize: 14, fontWeight: 700 }}>Arbiter verification</div>
-          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>18 independent safety checks</div>
-        </div>
-        <div style={lineStyle(step3)} />
-
-        {/* PASS / FAIL branch */}
-        <div style={{ opacity: step3, display: 'flex', gap: 40, alignItems: 'flex-start' }}>
-          <div style={{ textAlign: 'center' as const }}>
-            <div style={{ ...boxStyle(stepPass, status.approved + '66'), minWidth: 140 }}>
-              <div style={{ color: status.approved, fontSize: 14, fontWeight: 700 }}>PASS</div>
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>execute swap</div>
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' as const }}>
-            <div style={{ ...boxStyle(stepFail, status.rejected + '44'), minWidth: 140 }}>
-              <div style={{ color: status.rejected, fontSize: 14, fontWeight: 700 }}>FAIL</div>
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>adjust & retry</div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ ...lineStyle(step4), marginLeft: -70 }} />
-
-        {/* Attest */}
-        <div style={{ ...boxStyle(step4, status.approved + '44'), marginLeft: -70 }}>
-          <div style={{ color: status.approved, fontSize: 14, fontWeight: 700 }}>Record attestation on-chain</div>
-        </div>
-        <div style={{ ...lineStyle(step5), marginLeft: -70 }} />
-
-        {/* Queryable */}
-        <div style={{ ...boxStyle(step5, status.info + '44'), marginLeft: -70 }}>
-          <div style={{ color: status.info, fontSize: 13 }}>Anyone can query this agent's history</div>
+        <div style={{ color: colors.white, fontSize: 28, fontWeight: 700 }}>
+          Hackathon work vs. Nava infrastructure
         </div>
       </div>
 
-      {/* Right: what gets checked */}
-      <div style={{ flex: 1, paddingTop: 30 }}>
-        <div style={{
-          opacity: step6,
-          color: colors.red,
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '0.1em',
-          fontFamily: font.mono,
-          textTransform: 'uppercase' as const,
-          marginBottom: 20,
-        }}>
-          WHAT THE ARBITER CHECKS
-        </div>
-
-        {[
-          { title: 'Does the trade match the intent?', detail: 'token pairs, amounts, slippage, deadlines', color: colors.white },
-          { title: 'Is the transaction well-formed?', detail: 'format validation, protocol compatibility', color: colors.taupe },
-          { title: 'Is someone trying to exploit it?', detail: 'MEV risk, manipulation, tampering', color: status.pending },
-          { title: 'Is it legal?', detail: 'sanctions screening, token legitimacy', color: status.info },
-        ].map((item, i) => (
-          <div key={i} style={{
-            opacity: interpolate(checks, [i * 0.2, i * 0.2 + 0.3], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }),
-            marginBottom: 18,
-            display: 'flex',
-            gap: 12,
-            alignItems: 'baseline',
+      <div style={{ display: 'flex', gap: 40 }}>
+        {/* Left: built at hackathon */}
+        <div style={{ flex: 1 }}>
+          <div style={{
+            opacity: builtLabel,
+            padding: '8px 14px',
+            background: `${status.approved}10`,
+            border: `1px solid ${status.approved}25`,
+            borderRadius: 8,
+            fontFamily: font.mono,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase' as const,
+            color: status.approved,
+            marginBottom: 16,
           }}>
-            <div style={{ width: 8, height: 8, borderRadius: 4, background: item.color, flexShrink: 0, marginTop: 2 }} />
+            BUILT FOR THE SYNTHESIS
+          </div>
+
+          <div style={itemStyle(item1, status.approved)}>
+            <div style={dotStyle(status.approved)} />
             <div>
-              <div style={{ color: colors.white, fontSize: 15, fontWeight: 700, marginBottom: 2 }}>{item.title}</div>
-              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, fontFamily: font.mono }}>{item.detail}</div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>Trading agent</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>Python, autonomous rebalancing loop</div>
             </div>
           </div>
-        ))}
 
-        <div style={{
-          opacity: interpolate(frame, [260, 280], [0, 1], { extrapolateRight: 'clamp' }),
-          marginTop: 30,
-          padding: '14px 18px',
-          background: 'rgba(254,6,0,0.05)',
-          border: '1px solid rgba(254,6,0,0.2)',
-          borderRadius: 10,
-        }}>
-          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13 }}>
-            One critical failure stops everything.
-            <br />
-            The trade never reaches Uniswap.
+          <div style={itemStyle(item2, status.approved)}>
+            <div style={dotStyle(status.approved)} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>Uniswap V3 execution</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>Real swaps on Sepolia via web3.py</div>
+            </div>
+          </div>
+
+          <div style={itemStyle(item3, status.approved)}>
+            <div style={dotStyle(status.approved)} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>Attestation contract</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>On-chain receipts, ERC-8004 pattern</div>
+            </div>
+          </div>
+
+          <div style={itemStyle(item4, status.approved)}>
+            <div style={dotStyle(status.approved)} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>Dashboard</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>React UI with live balances, adversarial tests</div>
+            </div>
+          </div>
+
+          <div style={itemStyle(item5, status.approved)}>
+            <div style={dotStyle(status.approved)} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>ERC-8004 identity + manifest</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>Registered on Base Mainnet</div>
+            </div>
           </div>
         </div>
 
-        <div style={{
-          opacity: interpolate(frame, [270, 290], [0, 1], { extrapolateRight: 'clamp' }),
-          marginTop: 16,
-          color: 'rgba(255,255,255,0.3)',
-          fontSize: 12,
-          fontFamily: font.mono,
-        }}>
-          LLM reasoning runs through Venice for private inference.
-          <br />
-          Only the pass/fail result goes on-chain.
+        {/* Right: powered by Nava */}
+        <div style={{ flex: 1 }}>
+          <div style={{
+            opacity: poweredLabel,
+            padding: '8px 14px',
+            background: `${colors.red}10`,
+            border: `1px solid ${colors.red}25`,
+            borderRadius: 8,
+            fontFamily: font.mono,
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase' as const,
+            color: colors.red,
+            marginBottom: 16,
+          }}>
+            POWERED BY NAVA ARBITER
+          </div>
+
+          <div style={itemStyle(arbiter1, colors.red)}>
+            <div style={dotStyle(colors.red)} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>18-node validation graph</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>Intent, adversarial, compliance, technical checks</div>
+            </div>
+          </div>
+
+          <div style={itemStyle(arbiter2, colors.red)}>
+            <div style={dotStyle(colors.red)} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>LLM semantic reasoning</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>Venice or OpenAI, private inference supported</div>
+            </div>
+          </div>
+
+          <div style={itemStyle(arbiter3, colors.red)}>
+            <div style={dotStyle(colors.red)} />
+            <div>
+              <div style={{ color: colors.white, fontSize: 14, fontWeight: 700 }}>Protocol manifests</div>
+              <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontFamily: font.mono }}>Uniswap, Compound, CoW protocol support</div>
+            </div>
+          </div>
+
+          <div style={{
+            opacity: arbiter3,
+            marginTop: 16,
+            padding: '10px 14px',
+            background: 'rgba(254,6,0,0.05)',
+            border: '1px solid rgba(254,6,0,0.15)',
+            borderRadius: 8,
+          }}>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12 }}>
+              The Nava Arbiter is a developer product coming soon.
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, fontFamily: font.mono, marginTop: 4 }}>
+              We didn't build it at the hackathon. We used it.
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Flow at bottom */}
+      <div style={{
+        opacity: flow,
+        marginTop: 24,
+        padding: '12px 20px',
+        background: 'rgba(255,255,255,0.03)',
+        border: '1px solid rgba(255,255,255,0.06)',
+        borderRadius: 10,
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 16,
+        alignItems: 'center',
+        fontFamily: font.mono,
+        fontSize: 11,
+      }}>
+        <span style={{ color: status.approved }}>Agent</span>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>-&gt;</span>
+        <span style={{ color: colors.red }}>Arbiter (18 checks)</span>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>-&gt;</span>
+        <span style={{ color: status.approved }}>PASS / <span style={{ color: status.rejected }}>FAIL</span></span>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>-&gt;</span>
+        <span style={{ color: status.approved }}>Execute</span>
+        <span style={{ color: 'rgba(255,255,255,0.2)' }}>-&gt;</span>
+        <span style={{ color: status.approved }}>Attest on-chain</span>
+      </div>
+
+      <div style={{
+        opacity: flowNote,
+        marginTop: 8,
+        textAlign: 'center' as const,
+        color: 'rgba(255,255,255,0.25)',
+        fontSize: 11,
+        fontFamily: font.mono,
+      }}>
+        46 attestations on Sepolia. 39% pass rate. Every decision permanent.
       </div>
     </AbsoluteFill>
   );
