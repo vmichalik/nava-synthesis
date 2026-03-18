@@ -87,9 +87,13 @@ def _verify_and_record(intent: str, proposed_tx: dict, execute: bool = False) ->
     exec_tx_hash = None
     if execute and result.passed:
         ex_params = proposed_tx.get("call", {}).get("params", {})
+        _tokens = TOKENS.get(UNISWAP_CHAIN_ID, {})
+        _a2s = {v.lower(): k for k, v in _tokens.items()}
+        _tin = _a2s.get(ex_params.get("tokenIn", "").lower(), "WETH")
+        _tout = _a2s.get(ex_params.get("tokenOut", "").lower(), "USDC")
         swap_result = uniswap.execute_swap(
-            token_in="WETH",
-            token_out="USDC",
+            token_in=_tin,
+            token_out=_tout,
             amount_in=ex_params.get("amountIn", 0),
             amount_out_minimum=0,
             fee=ex_params.get("fee", 3000),
@@ -140,13 +144,20 @@ def _verify_and_record(intent: str, proposed_tx: dict, execute: bool = False) ->
     threading.Thread(target=_attest_background, daemon=True).start()
 
     tx_params = proposed_tx.get("call", {}).get("params", {})
+    tokens = TOKENS.get(UNISWAP_CHAIN_ID, {})
+    addr_to_sym = {v.lower(): k for k, v in tokens.items()}
+    tin_addr = tx_params.get("tokenIn", "").lower()
+    tout_addr = tx_params.get("tokenOut", "").lower()
+    tin_sym = addr_to_sym.get(tin_addr, "WETH")
+    tout_sym = addr_to_sym.get(tout_addr, "USDC")
+    decimals = 6 if tin_sym == "USDC" else 18
     return {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "attempt": 1,
         "intent": intent,
-        "token_in": "WETH",
-        "token_out": "USDC",
-        "amount_in": tx_params.get("amountIn", 0) / 1e18,
+        "token_in": tin_sym,
+        "token_out": tout_sym,
+        "amount_in": tx_params.get("amountIn", 0) / (10 ** decimals),
         "slippage_bps": proposed_tx.get("slippage_bps", 0),
         "chain_id": UNISWAP_CHAIN_ID,
         "proposed_tx": proposed_tx,
