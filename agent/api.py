@@ -29,6 +29,15 @@ app.add_middleware(
 _trades: list[dict] = []
 _initialized = False
 
+# Singleton attestation client (shared lock prevents nonce collisions)
+_attestation_client = None
+def _get_attestation_client():
+    global _attestation_client
+    if _attestation_client is None:
+        from agent.attestation_client import AttestationClient
+        _attestation_client = AttestationClient()
+    return _attestation_client
+
 
 def _load_initial_trades():
     """Load trades from the most recent audit log on startup."""
@@ -57,7 +66,7 @@ def _verify_and_record(intent: str, proposed_tx: dict, execute: bool = False) ->
 
     arbiter = ArbiterClient()
     uniswap = UniswapClient()
-    attestation = AttestationClient()
+    attestation = _get_attestation_client()
 
     # Verify
     try:

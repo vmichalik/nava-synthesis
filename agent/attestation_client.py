@@ -6,6 +6,7 @@ Posts verification results as on-chain attestations after each trade.
 import hashlib
 import json
 import os
+import threading
 from dataclasses import dataclass
 
 from web3 import Web3
@@ -106,6 +107,7 @@ class AttestationClient:
             self.wallet = None
 
         self.explorer_base = EXPLORER.get(chain_id, "https://sepolia.etherscan.io")
+        self._tx_lock = threading.Lock()
 
     def record(
         self,
@@ -125,7 +127,17 @@ class AttestationClient:
             )
 
         try:
-            # Hash the intent string
+            with self._tx_lock:
+                return self._record_inner(intent, decision, passed_nodes, failed_nodes, skipped_nodes, execution_tx_hash, protocol)
+        except Exception as e:
+            import traceback
+            return AttestationResult(
+                success=False, attestation_id=None, tx_hash=None,
+                explorer_url=None, error=f"{type(e).__name__}: {e}\n{traceback.format_exc()}",
+            )
+
+    def _record_inner(self, intent, decision, passed_nodes, failed_nodes, skipped_nodes, execution_tx_hash, protocol):
+        try:
             intent_hash = Web3.keccak(text=intent)
 
             # Convert decision

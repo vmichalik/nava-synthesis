@@ -590,34 +590,44 @@ function App() {
   }, [])
 
   const [adversarialLoading, setAdversarialLoading] = useState(false)
-  const [pendingStep, setPendingStep] = useState<PendingStep>(null)
-  const [pendingLabel, setPendingLabel] = useState('')
-  const [pendingRejected, setPendingRejected] = useState(false)
+
+  interface PendingItem { id: number; step: PendingStep; label: string; rejected: boolean }
+  const [pendingItems, setPendingItems] = useState<PendingItem[]>([])
+  const pendingIdRef = { current: 0 }
+
+  const addPending = (label: string): number => {
+    const id = ++pendingIdRef.current
+    setPendingItems(prev => [{ id, step: 'verifying', label, rejected: false }, ...prev])
+    return id
+  }
+  const updatePending = (id: number, update: Partial<PendingItem>) => {
+    setPendingItems(prev => prev.map(p => p.id === id ? { ...p, ...update } : p))
+  }
+  const removePending = (id: number) => {
+    setPendingItems(prev => prev.filter(p => p.id !== id))
+  }
 
   const triggerRun = async () => {
     setLoading(true)
     setError(null)
-    setPendingRejected(false)
-    setPendingLabel('Rebalance: 0.005 WETH -> USDC')
-    setPendingStep('verifying')
+    const pid = addPending('Rebalance: 0.005 WETH -> USDC')
     try {
-      const stepTimer = setTimeout(() => setPendingStep('executing'), 3000)
-      const stepTimer2 = setTimeout(() => setPendingStep('attesting'), 8000)
+      const stepTimer = setTimeout(() => updatePending(pid, { step: 'executing' }), 3000)
+      const stepTimer2 = setTimeout(() => updatePending(pid, { step: 'attesting' }), 8000)
       const res = await fetch(`${API_BASE}/api/run`, { method: 'POST' })
       clearTimeout(stepTimer)
       clearTimeout(stepTimer2)
       const data = await res.json()
       const decision = data?.trade?.verification?.decision
       if (decision === 'REJECT') {
-        setPendingRejected(true)
-        setPendingStep('attesting')
+        updatePending(pid, { rejected: true, step: 'attesting' })
         await new Promise(r => setTimeout(r, 800))
       }
-      setPendingStep(null)
+      removePending(pid)
       await fetchLatest()
     } catch (e) {
       setError(`Failed to trigger run: ${e}`)
-      setPendingStep(null)
+      removePending(pid)
     } finally {
       setLoading(false)
     }
@@ -626,21 +636,18 @@ function App() {
   const triggerAdversarial = async () => {
     setAdversarialLoading(true)
     setError(null)
-    setPendingRejected(false)
-    setPendingLabel('Adversarial test')
-    setPendingStep('verifying')
+    const pid = addPending('Adversarial test')
     try {
       const res = await fetch(`${API_BASE}/api/adversarial`, { method: 'POST' })
       const data = await res.json()
       const decision = data?.trade?.verification?.decision
-      setPendingRejected(decision === 'REJECT')
-      setPendingStep('attesting')
+      updatePending(pid, { rejected: decision === 'REJECT', step: 'attesting' })
       await new Promise(r => setTimeout(r, 800))
-      setPendingStep(null)
+      removePending(pid)
       await fetchLatest()
     } catch (e) {
       setError(`Failed to trigger adversarial test: ${e}`)
-      setPendingStep(null)
+      removePending(pid)
     } finally {
       setAdversarialLoading(false)
     }
@@ -800,10 +807,10 @@ function App() {
 
               {/* Right: trades */}
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
-                {pendingStep && (
-                  <PendingCard step={pendingStep} label={pendingLabel} rejected={pendingRejected} />
-                )}
-                {trades.length === 0 && !pendingStep ? (
+                {pendingItems.map(p => (
+                  <PendingCard key={p.id} step={p.step} label={p.label} rejected={p.rejected} />
+                ))}
+                {trades.length === 0 && pendingItems.length === 0 ? (
                   <Box sx={{
                     ...S.glass, borderRadius: '16px', p: 4, textAlign: 'center',
                     border: '1px solid rgba(255,255,255,0.04)',
