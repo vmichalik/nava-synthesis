@@ -440,18 +440,19 @@ function Portfolio({ run, onRefresh }: { run: AuditRun; onRefresh: () => void })
         }}>
           PORTFOLIO
         </Typography>
-        <Tooltip title="Refresh balances" arrow>
-          <Box
-            onClick={onRefresh}
-            sx={{
-              cursor: 'pointer', fontSize: 14, color: 'rgba(255,255,255,0.3)',
-              '&:hover': { color: colors.white },
-              transition: 'color 0.15s',
-            }}
-          >
-            &#x21bb;
-          </Box>
-        </Tooltip>
+        <Box
+          onClick={() => { onRefresh(); }}
+          sx={{
+            cursor: 'pointer', fontSize: 16, color: 'rgba(255,255,255,0.3)',
+            '&:hover': { color: colors.white },
+            '&:active': { transform: 'rotate(180deg)' },
+            transition: 'all 0.3s',
+            userSelect: 'none',
+          }}
+          title="Refresh balances"
+        >
+          &#x21bb;
+        </Box>
       </Box>
 
       <Typography sx={{ fontFamily: S.sans, fontSize: { xs: 28, sm: 36 }, fontWeight: 700, color: colors.white, mb: 1, lineHeight: 1 }}>
@@ -606,9 +607,9 @@ function App() {
 
   const fetchLatest = useCallback(async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/latest`)
+      const res = await fetch(`${API_BASE}/api/latest?t=${Date.now()}`)
       const data = await res.json()
-      if (data.run) setRun(data.run)
+      if (data.run) setRun({ ...data.run })
       setApiOnline(true)
       setError(null)
     } catch {
