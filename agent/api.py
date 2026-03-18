@@ -102,9 +102,12 @@ def _verify_and_record(intent: str, proposed_tx: dict, execute: bool = False) ->
     import threading
     attest_data = {"success": True, "attestation_id": None, "tx_hash": None, "explorer_url": None, "error": None, "pending": True}
 
+    # We'll store attest_data ref so the background thread can update it in place
+    attest_ref = attest_data
+
     def _attest_background():
         try:
-            attestation.record(
+            ar = attestation.record(
                 intent=intent,
                 decision=result.decision,
                 passed_nodes=len(result.passed_nodes),
@@ -113,8 +116,17 @@ def _verify_and_record(intent: str, proposed_tx: dict, execute: bool = False) ->
                 execution_tx_hash=exec_tx_hash,
                 protocol=result.protocol or "uniswap",
             )
-        except Exception:
-            pass
+            # Update the trade record in place (picked up by next poll)
+            attest_ref["success"] = ar.success
+            attest_ref["attestation_id"] = ar.attestation_id
+            attest_ref["tx_hash"] = ar.tx_hash
+            attest_ref["explorer_url"] = ar.explorer_url
+            attest_ref["error"] = ar.error
+            attest_ref.pop("pending", None)
+        except Exception as e:
+            attest_ref["success"] = False
+            attest_ref["error"] = str(e)
+            attest_ref.pop("pending", None)
 
     threading.Thread(target=_attest_background, daemon=True).start()
 

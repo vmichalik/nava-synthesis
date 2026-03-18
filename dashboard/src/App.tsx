@@ -236,8 +236,12 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
         {e?.success && (
           <Tag label={e.mode === 'live' ? 'executed' : 'simulated'} color={e.mode === 'live' ? S.pass : S.skip} />
         )}
-        {trade.attestation?.success && (
-          <Tag label="attested" color={S.pass} />
+        {trade.attestation && (
+          (trade.attestation as any).pending
+            ? <Tag label="attesting..." color={S.warn} />
+            : trade.attestation.success
+              ? <Tag label="attested" color={S.pass} />
+              : null
         )}
         <Typography sx={{
           fontFamily: S.mono, fontSize: 10, color: 'rgba(255,255,255,0.2)',
@@ -374,26 +378,38 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
           )}
 
           {/* Attestation */}
-          {trade.attestation?.tx_hash && (
+          {trade.attestation && (
             <Box sx={{
-              p: 1.5, borderRadius: '8px',
-              background: `${S.pass}08`,
-              border: `1px solid ${S.pass}15`,
+              p: { xs: 1, sm: 1.5 }, borderRadius: '8px',
+              background: (trade.attestation as any).pending ? `${S.warn}08` : `${S.pass}08`,
+              border: `1px solid ${(trade.attestation as any).pending ? S.warn : S.pass}15`,
             }}>
               <Typography sx={{ fontFamily: S.mono, fontSize: 9, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.1em', mb: 0.3 }}>
                 ON-CHAIN ATTESTATION
               </Typography>
-              {trade.attestation.explorer_url ? (
-                <a href={trade.attestation.explorer_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                  <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: S.pass, '&:hover': { textDecoration: 'underline' } }}>
-                    {trade.attestation.tx_hash.slice(0, 10)}...{trade.attestation.tx_hash.slice(-6)}
+              {(trade.attestation as any).pending ? (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{
+                    width: 6, height: 6, borderRadius: '50%', background: S.warn,
+                    animation: 'pulse 1s ease-in-out infinite',
+                  }} />
+                  <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: S.warn }}>
+                    Confirming on Sepolia...
                   </Typography>
-                </a>
-              ) : (
-                <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
-                  {trade.attestation.tx_hash}
-                </Typography>
-              )}
+                </Box>
+              ) : trade.attestation.tx_hash ? (
+                trade.attestation.explorer_url ? (
+                  <a href={trade.attestation.explorer_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                    <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: S.pass, '&:hover': { textDecoration: 'underline' } }}>
+                      {trade.attestation.tx_hash.slice(0, 10)}...{trade.attestation.tx_hash.slice(-6)}
+                    </Typography>
+                  </a>
+                ) : (
+                  <Typography sx={{ fontFamily: S.mono, fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>
+                    {trade.attestation.tx_hash}
+                  </Typography>
+                )
+              ) : null}
             </Box>
           )}
         </Box>
@@ -485,13 +501,14 @@ function Portfolio({ run }: { run: AuditRun }) {
 
 /* ─── Pending card ───────────────────────────────────── */
 
-function PendingCard({ step, label }: { step: PendingStep; label: string }) {
+function PendingCard({ step, label, rejected }: { step: PendingStep; label: string; rejected?: boolean }) {
   const steps: { key: PendingStep; text: string }[] = [
     { key: 'verifying', text: 'Verifying with Arbiter' },
     { key: 'executing', text: 'Executing on Uniswap' },
     { key: 'attesting', text: 'Recording attestation' },
   ]
   const currentIdx = steps.findIndex(s => s.key === step)
+  const doneColor = rejected ? S.fail : S.pass
 
   return (
     <Box sx={{
@@ -516,19 +533,20 @@ function PendingCard({ step, label }: { step: PendingStep; label: string }) {
         {steps.map((s, i) => {
           const isDone = i < currentIdx
           const isActive = i === currentIdx
-          const color = isDone ? S.pass : isActive ? S.warn : 'rgba(255,255,255,0.15)'
+          const isSkipped = rejected && s.key === 'executing' && i > currentIdx
+          const color = isDone ? doneColor : isActive ? S.warn : 'rgba(255,255,255,0.15)'
           return (
             <Box key={s.key} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Box sx={{
                 width: 18, height: 18, borderRadius: '50%',
-                border: `2px solid ${color}`,
+                border: `2px solid ${isSkipped ? 'rgba(255,255,255,0.1)' : color}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 ...(isActive && {
                   animation: 'pulse 1s ease-in-out infinite',
                 }),
               }}>
                 {isDone && (
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', background: S.pass }} />
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', background: doneColor }} />
                 )}
                 {isActive && (
                   <Box sx={{ width: 6, height: 6, borderRadius: '50%', background: S.warn }} />
@@ -537,7 +555,8 @@ function PendingCard({ step, label }: { step: PendingStep; label: string }) {
               <Typography sx={{
                 fontFamily: S.mono, fontSize: { xs: 9, sm: 10 }, fontWeight: 700,
                 letterSpacing: '0.05em', textTransform: 'uppercase',
-                color: isActive ? S.warn : isDone ? S.pass : 'rgba(255,255,255,0.2)',
+                color: isSkipped ? 'rgba(255,255,255,0.1)' : isActive ? S.warn : isDone ? doneColor : 'rgba(255,255,255,0.2)',
+                textDecoration: isSkipped ? 'line-through' : 'none',
               }}>
                 {s.text}
               </Typography>
@@ -545,7 +564,7 @@ function PendingCard({ step, label }: { step: PendingStep; label: string }) {
           )
         })}
       </Box>
-      <LinearProgress sx={{ height: 2 }} color="warning" />
+      <LinearProgress sx={{ height: 2 }} color={rejected ? 'error' : 'warning'} />
     </Box>
   )
 }
@@ -573,19 +592,27 @@ function App() {
   const [adversarialLoading, setAdversarialLoading] = useState(false)
   const [pendingStep, setPendingStep] = useState<PendingStep>(null)
   const [pendingLabel, setPendingLabel] = useState('')
+  const [pendingRejected, setPendingRejected] = useState(false)
 
   const triggerRun = async () => {
     setLoading(true)
     setError(null)
+    setPendingRejected(false)
     setPendingLabel('Rebalance: 0.005 WETH -> USDC')
     setPendingStep('verifying')
     try {
-      // Simulate step progression (API is synchronous, so we estimate timing)
       const stepTimer = setTimeout(() => setPendingStep('executing'), 3000)
       const stepTimer2 = setTimeout(() => setPendingStep('attesting'), 8000)
-      await fetch(`${API_BASE}/api/run`, { method: 'POST' })
+      const res = await fetch(`${API_BASE}/api/run`, { method: 'POST' })
       clearTimeout(stepTimer)
       clearTimeout(stepTimer2)
+      const data = await res.json()
+      const decision = data?.trade?.verification?.decision
+      if (decision === 'REJECT') {
+        setPendingRejected(true)
+        setPendingStep('attesting')
+        await new Promise(r => setTimeout(r, 800))
+      }
       setPendingStep(null)
       await fetchLatest()
     } catch (e) {
@@ -599,12 +626,16 @@ function App() {
   const triggerAdversarial = async () => {
     setAdversarialLoading(true)
     setError(null)
+    setPendingRejected(false)
     setPendingLabel('Adversarial test')
     setPendingStep('verifying')
     try {
-      const stepTimer = setTimeout(() => setPendingStep('attesting'), 3000)
-      await fetch(`${API_BASE}/api/adversarial`, { method: 'POST' })
-      clearTimeout(stepTimer)
+      const res = await fetch(`${API_BASE}/api/adversarial`, { method: 'POST' })
+      const data = await res.json()
+      const decision = data?.trade?.verification?.decision
+      setPendingRejected(decision === 'REJECT')
+      setPendingStep('attesting')
+      await new Promise(r => setTimeout(r, 800))
       setPendingStep(null)
       await fetchLatest()
     } catch (e) {
@@ -770,7 +801,7 @@ function App() {
               {/* Right: trades */}
               <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, width: { xs: '100%', md: 'auto' } }}>
                 {pendingStep && (
-                  <PendingCard step={pendingStep} label={pendingLabel} />
+                  <PendingCard step={pendingStep} label={pendingLabel} rejected={pendingRejected} />
                 )}
                 {trades.length === 0 && !pendingStep ? (
                   <Box sx={{
