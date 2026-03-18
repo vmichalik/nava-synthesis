@@ -323,16 +323,18 @@ def get_latest():
     }
 
 
-@app.post("/api/run")
-def trigger_rebalance():
-    """Run a real rebalance: verify, execute on Uniswap, attest on-chain."""
+TARGET_ALLOC = {"WETH": 0.6, "USDC": 0.4}
+REBALANCE_THRESHOLD = 0.05
+SWAP_AMOUNT_WETH = 10000000000000000   # 0.01 WETH
+SWAP_AMOUNT_USDC = 25000000             # 25 USDC (6 decimals)
+
+
+def _build_swap_tx(token_in: str, token_out: str, amount_raw: int):
+    """Build a proposed_tx for a swap in either direction."""
     tokens = TOKENS.get(UNISWAP_CHAIN_ID, {})
     router = UNISWAP_ROUTERS.get(UNISWAP_CHAIN_ID, {}).get("v3", "")
     now = int(time.time())
-    amount = 5000000000000000  # 0.005 WETH (small to conserve balance)
-
-    intent = "Swap 0.005 WETH for USDC on Uniswap V3, slippage protection enabled, deadline 30 minutes"
-    tx = {
+    return {
         "protocol": "uniswap",
         "to": router,
         "from": AGENT_WALLET,
@@ -340,13 +342,13 @@ def trigger_rebalance():
         "call": {
             "function": "exactInputSingle",
             "params": {
-                "tokenIn": tokens.get("WETH", ""),
-                "tokenOut": tokens.get("USDC", ""),
+                "tokenIn": tokens.get(token_in, ""),
+                "tokenOut": tokens.get(token_out, ""),
                 "fee": 3000,
                 "recipient": AGENT_WALLET,
                 "deadline": now + 1800,
-                "amountIn": amount,
-                "amountOutMinimum": int(amount * 0.995),
+                "amountIn": amount_raw,
+                "amountOutMinimum": int(amount_raw * 0.995),
                 "sqrtPriceLimitX96": 0,
             },
         },
@@ -355,9 +357,76 @@ def trigger_rebalance():
         "metadata": {"ttl_secs": 1800, "generated_at_unix": now},
     }
 
+
+@app.post("/api/run")
+def trigger_rebalance():
+    """Rebalance toward target allocation. Direction determined by current drift."""
+    portfolio = _get_portfolio()
+    alloc = portfolio["allocation"]
+    weth_alloc = alloc.get("WETH", 0)
+    usdc_alloc = alloc.get("USDC", 0)
+    weth_drift = weth_alloc - TARGET_ALLOC["WETH"]
+
+    if abs(weth_drift) < REBALANCE_THRESHOLD:
+        return {"trade": None, "message": "Portfolio within tolerance, no rebalance needed"}
+
+    if weth_drift > 0:
+        # Overweight WETH -> sell WETH for USDC
+        token_in, token_out = "WETH", "USDC"
+        amount = SWAP_AMOUNT_WETH
+        amount_human = f"{amount / 1e18:.4f}"
+    else:
+        # Overweight USDC -> sell USDC for WETH
+        token_in, token_out = "USDC", "WETH"
+        amount = SWAP_AMOUNT_USDC
+        amount_human = f"{amount / 1e6:.2f}"
+
+    intent = f"Swap {amount_human} {token_in} for {token_out} on Uniswap V3, slippage protection enabled, deadline 30 minutes"
+    tx = _build_swap_tx(token_in, token_out, amount)
+
     record = _verify_and_record(intent, tx, execute=True)
-    _trades.insert(0, record)  # newest first
+    record["token_in"] = token_in
+    record["token_out"] = token_out
+    _trades.insert(0, record)
     return {"trade": record}
+
+
+@app.post("/api/unbalance")
+def trigger_unbalance():
+    """Deliberately unbalance the portfolio (sell USDC for WETH or vice versa) to create rebalance opportunity."""
+    portfolio = _get_portfolio()
+    alloc = portfolio["allocation"]
+    weth_alloc = alloc.get("WETH", 0)
+
+    # Push away from target: if close to balanced, sell whichever is closer to target
+    if weth_alloc < 0.7:
+        # Buy more WETH to make it overweight
+        token_in, token_out = "USDC", "WETH"
+        amount = 50000000  # 50 USDC
+        amount_human = "50.00"
+    else:
+        # Sell WETH to make USDC overweight
+        token_in, token_out = "WETH", "USDC"
+        amount = 30000000000000000  # 0.03 WETH
+        amount_human = "0.0300"
+
+    intent = f"Swap {amount_human} {token_in} for {token_out} on Uniswap V3, slippage protection enabled, deadline 30 minutes"
+    tx = _build_swap_tx(token_in, token_out, amount)
+
+    record = _verify_and_record(intent, tx, execute=True)
+    record["token_in"] = token_in
+    record["token_out"] = token_out
+    record["scenario"] = "Deliberate unbalance"
+    _trades.insert(0, record)
+    return {"trade": record}
+
+
+@app.get("/api/wallet")
+def get_wallet():
+    """Return the agent's wallet address."""
+    from agent.uniswap_client import UniswapClient
+    uc = UniswapClient()
+    return {"wallet": uc.wallet, "chain_id": UNISWAP_CHAIN_ID}
 
 
 @app.post("/api/adversarial")

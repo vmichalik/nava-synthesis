@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Box, Typography, Button, LinearProgress, Alert, Tooltip, Collapse } from '@mui/material'
+import { Box, Typography, Button, LinearProgress, Alert, Tooltip, Collapse, Menu, MenuItem } from '@mui/material'
 import { colors, gradients, effects } from '@navalabs-dev/brand-mui'
 import type { AuditRun, TradeRecord } from './types'
 
@@ -421,26 +421,53 @@ function TradePanel({ trade, defaultOpen = false }: { trade: TradeRecord; defaul
 
 /* ─── Portfolio ──────────────────────────────────────── */
 
-function Portfolio({ run }: { run: AuditRun }) {
+function Portfolio({ run, onRefresh }: { run: AuditRun; onRefresh: () => void }) {
   const { portfolio: p } = run
   const target = { WETH: 0.6, USDC: 0.4 }
+  const wethDrift = (p.allocation['WETH'] || 0) - target.WETH
+  const needsRebalance = Math.abs(wethDrift) > 0.05
 
   return (
     <Box sx={{
       ...S.glass, borderRadius: '16px', p: 2.5,
       border: '1px solid rgba(255,255,255,0.04)',
     }}>
-      <Typography sx={{
-        fontFamily: S.mono, fontSize: 10, fontWeight: 700,
-        letterSpacing: '0.1em', textTransform: 'uppercase',
-        color: 'rgba(255,255,255,0.3)', mb: 2,
-      }}>
-        PORTFOLIO
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Typography sx={{
+          fontFamily: S.mono, fontSize: 10, fontWeight: 700,
+          letterSpacing: '0.1em', textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.3)',
+        }}>
+          PORTFOLIO
+        </Typography>
+        <Tooltip title="Refresh balances" arrow>
+          <Box
+            onClick={onRefresh}
+            sx={{
+              cursor: 'pointer', fontSize: 14, color: 'rgba(255,255,255,0.3)',
+              '&:hover': { color: colors.white },
+              transition: 'color 0.15s',
+            }}
+          >
+            &#x21bb;
+          </Box>
+        </Tooltip>
+      </Box>
 
-      <Typography sx={{ fontFamily: S.sans, fontSize: { xs: 28, sm: 36 }, fontWeight: 700, color: colors.white, mb: 3, lineHeight: 1 }}>
+      <Typography sx={{ fontFamily: S.sans, fontSize: { xs: 28, sm: 36 }, fontWeight: 700, color: colors.white, mb: 1, lineHeight: 1 }}>
         ${p.total_value_usd.toLocaleString()}
       </Typography>
+
+      {needsRebalance && (
+        <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: S.warn, mb: 2 }}>
+          {wethDrift > 0 ? 'WETH overweight' : 'USDC overweight'} — rebalance needed
+        </Typography>
+      )}
+      {!needsRebalance && (
+        <Typography sx={{ fontFamily: S.mono, fontSize: 10, color: S.pass, mb: 2 }}>
+          within target range
+        </Typography>
+      )}
 
       {Object.entries(p.balances).map(([token, balance]) => {
         const alloc = p.allocation[token] || 0
@@ -610,7 +637,7 @@ function App() {
   const triggerRun = async () => {
     setLoading(true)
     setError(null)
-    const pid = addPending('Rebalance: 0.005 WETH -> USDC')
+    const pid = addPending('Rebalancing toward 60/40')
     try {
       const stepTimer = setTimeout(() => updatePending(pid, { step: 'executing' }), 3000)
       const stepTimer2 = setTimeout(() => updatePending(pid, { step: 'attesting' }), 8000)
@@ -618,6 +645,12 @@ function App() {
       clearTimeout(stepTimer)
       clearTimeout(stepTimer2)
       const data = await res.json()
+      if (!data?.trade) {
+        // No rebalance needed
+        removePending(pid)
+        await fetchLatest()
+        return
+      }
       const decision = data?.trade?.verification?.decision
       if (decision === 'REJECT') {
         updatePending(pid, { rejected: true, step: 'attesting' })
@@ -651,6 +684,51 @@ function App() {
     } finally {
       setAdversarialLoading(false)
     }
+  }
+
+  const [settingsAnchor, setSettingsAnchor] = useState<null | HTMLElement>(null)
+  const [walletAddr, setWalletAddr] = useState('')
+  const [unbalanceLoading, setUnbalanceLoading] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  const triggerUnbalance = async () => {
+    setUnbalanceLoading(true)
+    setSettingsAnchor(null)
+    const pid = addPending('Unbalance swap')
+    try {
+      const stepTimer = setTimeout(() => updatePending(pid, { step: 'executing' }), 3000)
+      const res = await fetch(`${API_BASE}/api/unbalance`, { method: 'POST' })
+      clearTimeout(stepTimer)
+      const data = await res.json()
+      const decision = data?.trade?.verification?.decision
+      if (decision === 'REJECT') {
+        updatePending(pid, { rejected: true, step: 'attesting' })
+        await new Promise(r => setTimeout(r, 800))
+      }
+      removePending(pid)
+      await fetchLatest()
+    } catch (e) {
+      setError(`Failed: ${e}`)
+      removePending(pid)
+    } finally {
+      setUnbalanceLoading(false)
+    }
+  }
+
+  const copyWallet = async () => {
+    if (!walletAddr) {
+      try {
+        const res = await fetch(`${API_BASE}/api/wallet`)
+        const data = await res.json()
+        setWalletAddr(data.wallet)
+        await navigator.clipboard.writeText(data.wallet)
+      } catch { return }
+    } else {
+      await navigator.clipboard.writeText(walletAddr)
+    }
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+    setSettingsAnchor(null)
   }
 
   useEffect(() => {
@@ -748,6 +826,37 @@ function App() {
             >
               {adversarialLoading ? 'testing...' : 'test attack'}
             </Button>
+            <Box
+              onClick={(e) => setSettingsAnchor(e.currentTarget)}
+              sx={{
+                width: 36, height: 36, borderRadius: '10px',
+                ...S.glass,
+                border: '1px solid rgba(255,255,255,0.06)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                fontSize: 16, color: 'rgba(255,255,255,0.4)',
+                '&:hover': { color: colors.white, borderColor: 'rgba(255,255,255,0.15)' },
+                transition: 'all 0.15s',
+              }}
+            >
+              &#9881;
+            </Box>
+            <Menu
+              anchorEl={settingsAnchor}
+              open={Boolean(settingsAnchor)}
+              onClose={() => setSettingsAnchor(null)}
+            >
+              <MenuItem onClick={copyWallet} sx={{ fontFamily: S.mono, fontSize: 12 }}>
+                {copied ? 'Copied!' : 'Copy wallet address'}
+              </MenuItem>
+              <MenuItem
+                onClick={triggerUnbalance}
+                disabled={unbalanceLoading}
+                sx={{ fontFamily: S.mono, fontSize: 12, color: S.warn }}
+              >
+                {unbalanceLoading ? 'Swapping...' : 'Unbalance portfolio'}
+              </MenuItem>
+            </Menu>
           </Box>
         </Box>
 
@@ -802,7 +911,7 @@ function App() {
             <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start', flexDirection: { xs: 'column', md: 'row' } }}>
               {/* Left: portfolio */}
               <Box sx={{ flex: { md: '0 0 300px' }, width: { xs: '100%', md: 'auto' } }}>
-                <Portfolio run={run} />
+                <Portfolio run={run} onRefresh={fetchLatest} />
               </Box>
 
               {/* Right: trades */}
