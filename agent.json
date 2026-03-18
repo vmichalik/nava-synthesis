@@ -1,0 +1,41 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "Arbiter Guard",
+  "description": "Autonomous trading agent that verifies every transaction through Nava's Arbiter verification engine before executing on Uniswap V3. Supports portfolio rebalancing with configurable allocation targets, slippage tolerance, and retry logic. Every trade is verified by an 18-node validation graph covering intent alignment, adversarial detection, technical invariants, and legal compliance. All verification results are posted as on-chain attestations.",
+  "operatorWallet": "0xc03dF48bB52E86DBDF46F5256289FB51da32f88A",
+  "erc8004Identity": {
+    "registrationTx": "https://basescan.org/tx/0x3ded5141bd9af5533b69d236e0821089c1806923ce3fb3aaf83fa755e431506e",
+    "chain": "base-mainnet"
+  },
+  "tools": [
+    "arbiter-core (FastAPI verification engine)",
+    "uniswap-v3-swaprouter (Sepolia)",
+    "uniswap-v3-quoter-v2 (Sepolia)",
+    "web3.py",
+    "ArbiterAttestation contract (Sepolia)"
+  ],
+  "techStack": {
+    "language": "Python 3.13",
+    "agent": "Custom autonomous loop",
+    "verification": "Nava Arbiter (18-node GoT + deterministic graph)",
+    "execution": "Uniswap V3 SwapRouter02",
+    "attestation": "Custom Solidity contract (ERC-8004 pattern)",
+    "dashboard": "React + Vite + Nava brand theme",
+    "model": "claude-opus-4-6 (via Claude Code)"
+  },
+  "contracts": {
+    "attestation": {
+      "address": "0x708c3848f99a80732124344AebE6e9bBb5dA31D5",
+      "chain": "sepolia",
+      "explorer": "https://sepolia.etherscan.io/address/0x708c3848f99a80732124344AebE6e9bBb5dA31D5"
+    }
+  },
+  "supportedTrust": ["reputation", "validation"],
+  "computeConstraints": {
+    "maxCyclesPerHour": 60,
+    "maxSlippageBps": 150,
+    "requiresArbiterVerification": true
+  },
+  "taskCategories": ["defi-trading", "portfolio-rebalancing", "transaction-verification"],
+  "active": true
+}

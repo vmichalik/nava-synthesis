@@ -146,8 +146,8 @@ def compute_rebalance_swaps(
 def demo_portfolio() -> Portfolio:
     """Returns a sample unbalanced portfolio for demo/testing."""
     return Portfolio(
-        balances={"WETH": 0.1, "USDC": 0.0},
+        balances={"WETH": 0.01, "USDC": 497.0},
         prices={"WETH": 2500.0, "USDC": 1.0},
-        # Total: $250. WETH = 100%, USDC = 0%
+        # Total: $522. WETH = ~5%, USDC = ~95%
         # Target: 60/40 → need to sell ~$1100 WETH for USDC
     )
