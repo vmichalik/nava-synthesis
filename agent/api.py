@@ -340,11 +340,15 @@ SWAP_AMOUNT_WETH = 10000000000000000   # 0.01 WETH
 SWAP_AMOUNT_USDC = 25000000             # 25 USDC (6 decimals)
 
 
+TOKEN_DECIMALS = {"WETH": 18, "USDC": 6, "DAI": 18}
+
 def _build_swap_tx(token_in: str, token_out: str, amount_raw: int):
     """Build a proposed_tx for a swap in either direction."""
     tokens = TOKENS.get(UNISWAP_CHAIN_ID, {})
     router = UNISWAP_ROUTERS.get(UNISWAP_CHAIN_ID, {}).get("v3", "")
     now = int(time.time())
+    dec_in = TOKEN_DECIMALS.get(token_in, 18)
+    dec_out = TOKEN_DECIMALS.get(token_out, 18)
     return {
         "protocol": "uniswap",
         "to": router,
@@ -365,7 +369,12 @@ def _build_swap_tx(token_in: str, token_out: str, amount_raw: int):
         },
         "slippage_bps": 50,
         "validTo": now + 1800,
-        "metadata": {"ttl_secs": 1800, "generated_at_unix": now},
+        "metadata": {
+            "ttl_secs": 1800,
+            "generated_at_unix": now,
+            "token_in_decimals": dec_in,
+            "token_out_decimals": dec_out,
+        },
     }
 
 
@@ -385,14 +394,12 @@ def trigger_rebalance():
         # Overweight WETH -> sell WETH for USDC
         token_in, token_out = "WETH", "USDC"
         amount = SWAP_AMOUNT_WETH
-        amount_human = f"{amount / 1e18:.4f}"
     else:
         # Overweight USDC -> sell USDC for WETH
         token_in, token_out = "USDC", "WETH"
         amount = SWAP_AMOUNT_USDC
-        amount_human = f"{amount / 1e6:.2f}"
 
-    intent = f"Swap {amount_human} {token_in} for {token_out} on Uniswap V3, slippage protection enabled, deadline 30 minutes"
+    intent = f"Rebalance portfolio: swap {token_in} for {token_out} on Uniswap V3, slippage protection enabled, deadline 30 minutes"
     tx = _build_swap_tx(token_in, token_out, amount)
 
     record = _verify_and_record(intent, tx, execute=True)
@@ -414,14 +421,12 @@ def trigger_unbalance():
         # Buy more WETH to make it overweight
         token_in, token_out = "USDC", "WETH"
         amount = 50000000  # 50 USDC
-        amount_human = "50.00"
     else:
         # Sell WETH to make USDC overweight
         token_in, token_out = "WETH", "USDC"
         amount = 30000000000000000  # 0.03 WETH
-        amount_human = "0.0300"
 
-    intent = f"Swap {amount_human} {token_in} for {token_out} on Uniswap V3, slippage protection enabled, deadline 30 minutes"
+    intent = f"Unbalance portfolio: swap {token_in} for {token_out} on Uniswap V3, slippage protection enabled, deadline 30 minutes"
     tx = _build_swap_tx(token_in, token_out, amount)
 
     record = _verify_and_record(intent, tx, execute=True)
