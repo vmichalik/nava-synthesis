@@ -1,16 +1,36 @@
-# Arbiter Guard
+<p align="center">
+  <img src="assets/nava-logo.svg" width="48" alt="Nava" />
+</p>
 
-An autonomous trading agent that checks every transaction against 18 independent safety rules before it touches the chain. Trades that pass get executed. Trades that fail get blocked. Both outcomes are recorded on-chain as permanent, queryable receipts.
+<h1 align="center">Arbiter Guard</h1>
 
-Built for [The Synthesis](https://synthesis.md/) by Vijay Michalik + Claude (Opus 4.6).
+<p align="center">
+  An autonomous trading agent that checks every transaction against 18 independent<br>
+  safety rules before it touches the chain. Passes get executed. Failures get blocked.<br>
+  Both outcomes are recorded on-chain as permanent, queryable receipts.
+</p>
+
+<p align="center">
+  <a href="https://synthesis.md/">The Synthesis</a> &nbsp;|&nbsp;
+  <a href="https://x.com/navaai">@navaai</a> &nbsp;|&nbsp;
+  <a href="https://sepolia.etherscan.io/address/0x708c3848f99a80732124344AebE6e9bBb5dA31D5">Attestation Contract</a>
+</p>
+
+---
+
+<p align="center">
+  <img src="assets/demo.gif" alt="Arbiter Guard terminal demo" width="720" />
+</p>
+
+---
 
 ## How it works
 
-The agent maintains a target portfolio allocation (60% WETH / 40% USDC) and rebalances when drift exceeds 5%. Before any swap goes through, the proposed transaction is sent to the Arbiter for verification.
+The agent maintains a 60/40 WETH/USDC target allocation and rebalances when drift exceeds 5%. Before any swap goes through, the proposed transaction is sent to the Arbiter for verification.
 
-The Arbiter checks whether the swap matches what was requested, whether the parameters are safe, whether the addresses are sanctioned, whether the routing contract is legitimate, and whether anyone has tampered with the intent. It runs 18 checks in total. If any critical check fails, the trade is blocked.
+The Arbiter checks whether the swap matches what was requested, whether the parameters are safe, whether the addresses are sanctioned, whether the routing contract is legitimate, and whether anyone has tampered with the intent. 18 checks in total. If any critical check fails, the trade is blocked.
 
-After verification, the result (pass or reject) is posted on-chain as an attestation. Other agents or contracts can query this history to decide whether to trust this agent before interacting with it.
+After verification, the result is posted on-chain as an attestation. Other agents or contracts can query this history to decide whether to trust this agent.
 
 ```
     Agent decides to trade
@@ -43,114 +63,134 @@ After verification, the result (pass or reject) is posted on-chain as an attesta
 
 In autonomous mode, the agent runs this loop continuously without human intervention.
 
+---
+
 ## On-chain artifacts
 
-| What | Where |
-|------|-------|
-| Attestation contract | [`0x708c384...`](https://sepolia.etherscan.io/address/0x708c3848f99a80732124344AebE6e9bBb5dA31D5) on Sepolia |
-| Agent identity (ERC-8004) | [`0x3ded514...`](https://basescan.org/tx/0x3ded5141bd9af5533b69d236e0821089c1806923ce3fb3aaf83fa755e431506e) on Base |
-| Example swap | [`0xaf9cb6...`](https://sepolia.etherscan.io/tx/0xaf9cb63873a68cb3ae9c5fe58c748b9fbb0731af77190d64196ed33e04523646) on Sepolia |
-| Example attestation | [`0x883b92...`](https://sepolia.etherscan.io/tx/0x883b9d238c975418c4d0c2c833f502dca7f80feae14e037b685d142c1539d982) on Sepolia |
+| | |
+|---|---|
+| **Attestation contract** | [`0x708c3848...`](https://sepolia.etherscan.io/address/0x708c3848f99a80732124344AebE6e9bBb5dA31D5) on Sepolia |
+| **Agent identity** (ERC-8004) | [`0x3ded5141...`](https://basescan.org/tx/0x3ded5141bd9af5533b69d236e0821089c1806923ce3fb3aaf83fa755e431506e) on Base |
+| **Example swap** | [`0xaf9cb638...`](https://sepolia.etherscan.io/tx/0xaf9cb63873a68cb3ae9c5fe58c748b9fbb0731af77190d64196ed33e04523646) on Sepolia |
+| **Example attestation** | [`0x883b9d23...`](https://sepolia.etherscan.io/tx/0x883b9d238c975418c4d0c2c833f502dca7f80feae14e037b685d142c1539d982) on Sepolia |
+| **On-chain record** | 46 attestations, 39% pass rate |
 
-46 attestations on-chain. 39% pass rate (the rest were deliberately adversarial tests). Any contract can call `getAgentReputation(address)` to check the record.
+Any contract can call `getAgentReputation(address)` to check the record.
+
+---
 
 ## Demo transactions
 
-Six sequential scenarios, each verified by the Arbiter and attested on Sepolia:
+Six sequential scenarios, each verified by the Arbiter and attested on Sepolia.
 
-**PASS -- Rebalance buy WETH** (USDC overweight, agent sells USDC for WETH)
-- Intent: `Rebalance portfolio: swap USDC for WETH on Uniswap V3, slippage protection enabled`
-- 13 checks passed, 0 failed
-- Swap: [`0xaf9cb6...`](https://sepolia.etherscan.io/tx/0xaf9cb63873a68cb3ae9c5fe58c748b9fbb0731af77190d64196ed33e04523646) (25 USDC -> WETH, block 10470537)
-- Attestation: [`0x883b92...`](https://sepolia.etherscan.io/tx/0x883b9d238c975418c4d0c2c833f502dca7f80feae14e037b685d142c1539d982)
+#### PASS -- Rebalance buy WETH
+> USDC overweight, agent sells USDC for WETH
 
-**REJECT -- Sanctioned recipient** (Tornado Cash deposit address)
-- Intent: `Swap 0.5 WETH for USDC, send to 0x8576a...91353c`
-- Failed: `sanctions_screening` -- address on OFAC deny list
-- Attestation: [`0x5db92c...`](https://sepolia.etherscan.io/tx/0x5db92cb50a14ef6a6bf5a1e6ac28073c6d5cc1a7be0217fb30ccc8456911266e)
+```
+Intent:       Rebalance portfolio: swap USDC for WETH on Uniswap V3
+Checks:       13 passed, 0 failed
+Swap TX:      0xaf9cb63873a68cb3ae9c5fe58c748b9fbb0731af   (25 USDC -> WETH, block 10470537)
+Attestation:  0x883b9d238c975418c4d0c2c833f502dca7f80fea
+```
 
-**REJECT -- Intent mismatch** (intent says DAI, transaction swaps WETH)
-- Intent: `Buy 100 DAI with USDC on Uniswap V3, slippage protection enabled`
-- Failed: `amount_matching` -- intent does not match transaction
-- Attestation: [`0x9e7820...`](https://sepolia.etherscan.io/tx/0x9e7820cc171d0a3331a70584074ff2d836ae92bef7eac3db7389ea6635359f9a)
+[View swap](https://sepolia.etherscan.io/tx/0xaf9cb63873a68cb3ae9c5fe58c748b9fbb0731af77190d64196ed33e04523646) | [View attestation](https://sepolia.etherscan.io/tx/0x883b9d238c975418c4d0c2c833f502dca7f80feae14e037b685d142c1539d982)
 
-**REJECT -- Unknown router** (transaction targets a fake contract)
-- Intent: `Rebalance portfolio: swap WETH for USDC on Uniswap V3`
-- Failed: `protocol_compatibility` -- `0xdead...` is not a registered Uniswap contract
-- Attestation: [`0x821e99...`](https://sepolia.etherscan.io/tx/0x821e996dc59d4a0ec54df2c4110c452f58c3e68394fd222b52607128fcd01b07)
+#### REJECT -- Sanctioned recipient
+> Tornado Cash deposit address on OFAC deny list
 
-Every rejection is permanently recorded on-chain alongside the passes.
+```
+Intent:       Swap 0.5 WETH for USDC, send to 0x8576a...91353c
+Failed:       sanctions_screening -- address present in sanctions/deny registry
+Attestation:  0x5db92cb50a14ef6a6bf5a1e6ac28073c6d5cc1a7
+```
+
+[View attestation](https://sepolia.etherscan.io/tx/0x5db92cb50a14ef6a6bf5a1e6ac28073c6d5cc1a7be0217fb30ccc8456911266e)
+
+#### REJECT -- Intent mismatch
+> Intent says DAI but the transaction swaps WETH
+
+```
+Intent:       Buy 100 DAI with USDC on Uniswap V3
+Failed:       amount_matching -- intent does not match transaction
+Attestation:  0x9e7820cc171d0a3331a70584074ff2d836ae92be
+```
+
+[View attestation](https://sepolia.etherscan.io/tx/0x9e7820cc171d0a3331a70584074ff2d836ae92bef7eac3db7389ea6635359f9a)
+
+#### REJECT -- Unknown router
+> Transaction targets a fake contract address
+
+```
+Intent:       Rebalance portfolio: swap WETH for USDC on Uniswap V3
+Failed:       protocol_compatibility -- 0xdead... is not a registered Uniswap contract
+Attestation:  0x821e996dc59d4a0ec54df2c4110c452f58c3e683
+```
+
+[View attestation](https://sepolia.etherscan.io/tx/0x821e996dc59d4a0ec54df2c4110c452f58c3e68394fd222b52607128fcd01b07)
+
+> Every rejection is permanently recorded on-chain alongside the passes.
+
+---
 
 ## What the Arbiter checks
 
-18 validation nodes, grouped into four categories:
+18 validation nodes in four groups:
 
-- **Does the trade match the intent?** Token pairs, amounts, slippage bounds, deadlines, fee tiers
-- **Is the transaction well-formed?** Format validation, protocol compatibility, sequencing
-- **Is someone trying to exploit it?** MEV risk, parameter manipulation, intent tampering, consistency
-- **Is it legal?** Sanctions screening, token legitimacy
+| | |
+|---|---|
+| **Intent alignment** | Does the trade match what was requested? Token pairs, amounts, slippage, deadlines, fees |
+| **Technical invariants** | Is the transaction well-formed? Format validation, protocol compatibility, sequencing |
+| **Adversarial detection** | Is someone trying to exploit it? MEV risk, parameter manipulation, intent tampering |
+| **Legal compliance** | Is it legal? Sanctions screening, token legitimacy |
 
 One critical failure stops everything. The trade never reaches Uniswap.
 
 The LLM reasoning behind each check can run through Venice for private inference. The verification logic stays private. Only the pass/fail result goes on-chain.
 
+---
+
 ## Running it
 
-### Prerequisites
-
-- Python 3.11+
-- Node.js 18+ (for the dashboard)
-- [arbiter-core](https://github.com/navalabs-dev/arbiter-core) running on port 8000
-
-### Setup
+**Prerequisites:** Python 3.11+, Node.js 18+, [arbiter-core](https://github.com/navalabs-dev/arbiter-core) running on port 8000
 
 ```bash
 cd nava-synthesis
 pip install -r requirements.txt
 cp .env.example .env
+# Add OPENAI_API_KEY and AGENT_PRIVATE_KEY to .env
 ```
 
-Add to `.env`:
-```
-OPENAI_API_KEY=sk-...          # LLM semantic checks in the Arbiter
-AGENT_PRIVATE_KEY=0x...        # Sepolia wallet for live swaps + attestations
-```
-
-### Single run
-
+**Single run:**
 ```bash
 python -m agent.trader
 ```
 
-### Autonomous mode
-
+**Autonomous mode:**
 ```bash
 python -m agent.trader --autonomous --interval 60 --max-cycles 10
 ```
 
-Runs the full loop every 60 seconds: check drift, compute swap, verify, execute, attest. Drop `--max-cycles` to run indefinitely.
-
-### Dashboard
-
+**Dashboard:**
 ```bash
-python -m agent.api          # API server
-cd dashboard && npm install && npm run dev   # React UI
+python -m agent.api                              # API server
+cd dashboard && npm install && npm run dev       # React UI
 ```
 
 The dashboard reads live balances from Sepolia, shows the verification status of every trade, and lets you trigger rebalances or adversarial tests interactively.
 
+---
+
 ## Guardrails
 
 Even in autonomous mode:
-
 - Slippage hard cap at 1.5%
 - Every swap must pass Arbiter verification before execution
 - 3 retry attempts max per swap
 - All decisions (pass and reject) get attested on-chain
 
-## Attestation contract
+---
 
-Two functions:
+## Attestation contract
 
 ```solidity
 // Record a verification result
@@ -174,6 +214,8 @@ function getAgentReputation(address agent) external view returns (
 )
 ```
 
+---
+
 ## Project structure
 
 ```
@@ -191,20 +233,28 @@ dashboard/
 agent.json               ERC-8004 agent manifest
 ```
 
+---
+
 ## Tracks
 
-**Open Track** (Agents that pay + Agents that trust): The human sets the rules. The agent trades within those boundaries. Every trade is independently verified and auditable on-chain.
+**Open Track** (Agents that pay + Agents that trust)
+The human sets the rules. The agent trades within those boundaries. Every trade is independently verified and auditable on-chain.
 
-**Agents With Receipts, ERC-8004** (Protocol Labs): Verification results are posted as on-chain attestations. The agent builds a queryable trust history. Other agents can check the record before interacting.
+**Agents With Receipts, ERC-8004** (Protocol Labs)
+Verification results are posted as on-chain attestations. The agent builds a queryable trust history. Other agents can check the record before interacting.
 
-**Let the Agent Cook** (Protocol Labs): Autonomous mode. Full decision loop without human intervention. ERC-8004 identity, agent manifest, structured logs, safety guardrails.
+**Let the Agent Cook** (Protocol Labs)
+Autonomous mode. Full decision loop without human intervention. ERC-8004 identity, agent manifest, structured logs, safety guardrails.
 
-**Private Agents, Trusted Actions** (Venice): The Arbiter's LLM checks run through Venice's private inference. The reasoning stays private. Only the binary result goes on-chain.
+**Private Agents, Trusted Actions** (Venice)
+The Arbiter's LLM checks run through Venice's private inference. The reasoning stays private. Only the binary result goes on-chain.
+
+---
 
 ## Stack
 
 | | |
-|-|-|
+|---|---|
 | Agent | Python, autonomous decision loop |
 | Verification | Nava Arbiter, 18-node validation graph (Venice or OpenAI) |
 | Execution | Uniswap V3 SwapRouter02, web3.py |
@@ -213,8 +263,14 @@ agent.json               ERC-8004 agent manifest
 | Dashboard | React, Vite, Nava brand theme |
 | Network | Ethereum Sepolia |
 
-## Try it
+---
 
-Preview access to the Nava Arbiter is coming soon for agent builders. If you're building autonomous agents that move value on-chain and want independent verification before execution, reach out.
+<p align="center">
+  Preview access to the Nava Arbiter is coming soon for agent builders.<br>
+  If you're building autonomous agents that move value on-chain<br>
+  and want independent verification before execution, reach out.
+</p>
 
-[@navaai](https://x.com/navaai)
+<p align="center">
+  <a href="https://x.com/navaai"><b>@navaai</b></a>
+</p>
