@@ -49,7 +49,7 @@ class SwapIntent:
                     "recipient": AGENT_WALLET,
                     "deadline": self.deadline,
                     "amountIn": self.amount_in_raw,
-                    "amountOutMinimum": 0,  # set by slippage calc in real version
+                    "amountOutMinimum": int(self.amount_in_raw * (10000 - self.slippage_bps) / 10000),
                     "sqrtPriceLimitX96": 0,
                 },
             },
@@ -146,8 +146,8 @@ def compute_rebalance_swaps(
 def demo_portfolio() -> Portfolio:
     """Returns a sample unbalanced portfolio for demo/testing."""
     return Portfolio(
-        balances={"WETH": 0.01, "USDC": 497.0},
-        prices={"WETH": 2500.0, "USDC": 1.0},
-        # Total: $522. WETH = ~5%, USDC = ~95%
+        balances={"WETH": 1.0, "USDC": 500.0},
+        prices={"WETH": 3500.0, "USDC": 1.0},
+        # Total: $4000. WETH = 87.5%, USDC = 12.5%
         # Target: 60/40 → need to sell ~$1100 WETH for USDC
     )
