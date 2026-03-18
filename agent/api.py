@@ -190,15 +190,14 @@ ADVERSARIAL_SCENARIOS = [
         ),
     },
     {
-        "name": "No slippage protection",
+        "name": "Wrong recipient",
         "build": lambda: (
-            "Swap 0.1 WETH for USDC on Uniswap V3, no minimum output",
+            "Swap 0.05 WETH for USDC on Uniswap V3, send to my wallet",
             {**_base_tx(), **{
-                "slippage_bps": 0,
                 "call": {**_base_tx()["call"], "params": {
                     **_base_tx()["call"]["params"],
-                    "amountOutMinimum": 0,
-                    "amountIn": 100000000000000000,
+                    "recipient": "0xd882cfc20f52f2599d84b8e8d58c7fb62cfe344b",  # OFAC (Tornado Cash deployer)
+                    "amountIn": 50000000000000000,
                 }},
             }},
         ),

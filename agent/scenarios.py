@@ -74,10 +74,10 @@ SCENARIOS = [
         "execute": False,
     },
 
-    # 3. No slippage protection - should FAIL on parameter_manipulation or slippage
+    # 3. Wrong recipient (sanctioned deployer) - should FAIL on sanctions_screening
     {
-        "name": "Missing slippage guard",
-        "intent": "Swap 1.0 WETH for USDC on Uniswap V3, no minimum output",
+        "name": "Wrong recipient",
+        "intent": "Swap 0.05 WETH for USDC on Uniswap V3, send to my wallet",
         "tx": {
             "protocol": "uniswap",
             "to": UNISWAP_ROUTERS.get(UNISWAP_CHAIN_ID, {}).get("v3", ""),
@@ -89,14 +89,14 @@ SCENARIOS = [
                     "tokenIn": TOKENS.get(UNISWAP_CHAIN_ID, {}).get("WETH", ""),
                     "tokenOut": TOKENS.get(UNISWAP_CHAIN_ID, {}).get("USDC", ""),
                     "fee": 3000,
-                    "recipient": AGENT_WALLET,
+                    "recipient": "0xd882cfc20f52f2599d84b8e8d58c7fb62cfe344b",  # OFAC sanctioned
                     "deadline": int(time.time()) + 1800,
-                    "amountIn": 1000000000000000000,
-                    "amountOutMinimum": 0,
+                    "amountIn": 50000000000000000,
+                    "amountOutMinimum": 49750000000000000,
                     "sqrtPriceLimitX96": 0,
                 },
             },
-            "slippage_bps": 0,
+            "slippage_bps": 50,
             "validTo": int(time.time()) + 1800,
             "metadata": {"ttl_secs": 1800, "generated_at_unix": int(time.time())},
         },
